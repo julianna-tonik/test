@@ -1,0 +1,35 @@
+import { Metadata } from "next";
+import { HeroScrollProvider } from "@/components/sections/hero-scroll-context";
+import { Footer } from "@/components/sections/footer";
+import { SanityHero } from "@/components/sanity/hero";
+import { SanityHowItWorks } from "@/components/sanity/how-it-works";
+import { SanityExamples } from "@/components/sanity/examples";
+import { SanityWhatChanges } from "@/components/sanity/what-changes";
+import { SanityMigration } from "@/components/sanity/migration";
+import { SanityPricing } from "@/components/sanity/pricing";
+import { SanityCta } from "@/components/sanity/cta";
+
+export const metadata: Metadata = {
+  title: "Build and manage pages faster with Sanity | tonik",
+  description:
+    "We build Sanity websites your marketing team can update by describing what they need. Every page still follows your brand and publishing process.",
+};
+
+export default function SanityPage() {
+  return (
+    <HeroScrollProvider>
+      <div className="flex min-h-screen w-full items-start justify-center gap-2 bg-off-black px-6 pt-10">
+        <div className="flex w-full flex-col items-center">
+          <SanityHero />
+          <SanityHowItWorks />
+          <SanityExamples />
+          <SanityWhatChanges />
+          <SanityMigration />
+          <SanityPricing />
+          <SanityCta />
+          <Footer />
+        </div>
+      </div>
+    </HeroScrollProvider>
+  );
+}

@@ -1,0 +1,4 @@
+{
+  "framework": "nextjs",
+  "installCommand": "npx bun@1 install --frozen-lockfile"
+}

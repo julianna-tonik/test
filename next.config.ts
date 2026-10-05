@@ -14,7 +14,14 @@ const nextConfig: NextConfig = {
           }
         ],
         permanent: true,
-      }
+      },
+      // Preview deployment of the Sanity offer redesign
+      {
+        source: "/",
+        destination: "/sanity",
+        has: [{ type: "host", value: "sanity-offer-tonik.vercel.app" }],
+        permanent: false,
+      },
     ]
   },
   rewrites() {
