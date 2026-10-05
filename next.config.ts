@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
       {
         source: "/",
         destination: "/sanity",
-        has: [{ type: "host", value: "sanity-offer-tonik.vercel.app" }],
+        missing: [{ type: "host", value: "vibefixer.tonik.com" }],
         permanent: false,
       },
     ]
