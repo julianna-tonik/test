@@ -12,7 +12,7 @@ import { Actor, ActorTag } from "./actor";
  */
 
 type Phase = 0 | 1 | 2;
-const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
+export const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
 
 const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
@@ -616,7 +616,7 @@ function ReviewLiteral() {
   );
 }
 
-const PANELS = [AskLiteral, BuildLiteral, ReviewLiteral];
+export const PANELS = [AskLiteral, BuildLiteral, ReviewLiteral];
 
 export function ProductFragments() {
   const ref = useRef<HTMLDivElement>(null);

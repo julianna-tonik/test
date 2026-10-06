@@ -521,8 +521,8 @@ function SceneAB() {
 
 const SCENES = [SceneEvent, SceneReport, SceneHomepage, SceneAB];
 
-export function RequestScene({ index, active }: { index: number; active: boolean }) {
-  const reduce = !!useReducedMotion();
+export function RequestScene({ index, active, snapshot }: { index: number; active: boolean; snapshot?: boolean }) {
+  const reduce = !!useReducedMotion() || !!snapshot;
   const Scene = SCENES[index];
   return (
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
@@ -572,10 +572,10 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
 
 
 
-export function MigrationLanes() {
+export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { margin: "-20% 0px" });
-  const reduce = !!useReducedMotion();
+  const reduce = !!useReducedMotion() || !!snapshot;
   const on = inView && !reduce;
   return (
     <Ctx.Provider value={{ on, reduce }}>
