@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { List, ListItem } from "@/components/ui/list-item";
 import { Reveal, SectionLabel } from "./shared";
 import { MigrationLanes } from "./request-scenes";
+import { WhereIcon } from "./where-icons";
 
 export function SanityMigration() {
   return (
@@ -34,9 +35,18 @@ export function SanityMigration() {
             </p>
             <p className="text-base leading-6 text-off-white-light">The same workflow can support more of your content operations.</p>
           </div>
-          <p className="text-base leading-6">Create pages from familiar tools. <span className="text-off-white-light">Start a request in Slack, Claude, Codex, or another tool.</span></p>
-          <p className="text-base leading-6">Handle repetitive work. <span className="text-off-white-light">Manage translations, metadata, and bulk updates.</span></p>
-          <p className="text-base leading-6">Connect external systems. <span className="text-off-white-light">Add analytics, CRM, translation, or internal tools.</span></p>
+          <div className="flex flex-col gap-6">
+            <WhereIcon i={0} />
+            <p className="text-base leading-6">Create pages from familiar tools. <span className="text-off-white-light">Start a request in Slack, Claude, Codex, or another tool.</span></p>
+          </div>
+          <div className="flex flex-col gap-6">
+            <WhereIcon i={1} />
+            <p className="text-base leading-6">Handle repetitive work. <span className="text-off-white-light">Manage translations, metadata, and bulk updates.</span></p>
+          </div>
+          <div className="flex flex-col gap-6">
+            <WhereIcon i={2} />
+            <p className="text-base leading-6">Connect external systems. <span className="text-off-white-light">Add analytics, CRM, translation, or internal tools.</span></p>
+          </div>
         </Reveal>
       </div>
     </section>
