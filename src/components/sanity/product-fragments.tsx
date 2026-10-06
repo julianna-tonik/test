@@ -158,48 +158,50 @@ const SLOT = {
   cards: { y: 132, h: 40 },
   cta: { y: 184, h: 30 },
 };
-const CARD_X = [40, 125, 210];
+/** Three cards (7 cells wide) become four (5 cells wide) when AI adds one. */
+const CARDS3 = [40, 125, 210];
+const CARDS4 = [40, 40 + 190 / 3, 40 + 380 / 3, 230];
+const CARD_W3 = 70;
+const CARD_W4 = 50;
 
-/* ── 02 BUILD: AI places approved blocks into the page, one by one, in place ── */
-
-const BUILD: { key: keyof typeof SLOT; cells: { x: number; cols: number }[] }[] = [
-  { key: "hero", cells: [{ x: 40, cols: 24 }] },
-  { key: "logos", cells: [{ x: 40, cols: 24 }] },
-  { key: "cards", cells: CARD_X.map((x) => ({ x, cols: 7 })) },
-  { key: "cta", cells: [{ x: 40, cols: 24 }] },
-];
+/* ── 02 BUILD: the page exists; AI adds a fourth card and the row makes room ── */
 
 function BuildPanel() {
   const d = useDur();
+  const { y, h } = SLOT.cards;
   return (
     <>
       <Header>
         <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
       </Header>
       <rect x="36.5" y="44.5" width="248" height="174" stroke="#2e2e2e" fill="none" />
-      {BUILD.map((b, i) => {
-        const s = 0.3 + i * 0.75;
-        const { y, h } = SLOT[b.key];
-        return (
-          <g key={b.key}>
-            {/* cells settle in place — no travel, no overlap */}
-            <G t={{ opacity: ab(0, 1, s + 0.15, s + 0.5, d) }}>
-              {b.cells.map((c) => (
-                <path key={c.x} d={cellsPath(c.x, y, c.cols, h / C)} stroke={GRID} fill="none" />
-              ))}
-            </G>
-            {/* AI at work: dashed edge + nodes, then a clean swap to a solid edge */}
-            <G t={{ opacity: [[0, 0], [s, 0], [s + 0.15, 1], [s + 0.6, 1], [s + 0.72, 0], [d, 0]] }}>
-              <EdgeBox x={PAGE.x} y={y} w={PAGE.w} h={h} dashed />
-            </G>
-            <G t={{ opacity: ab(0, 1, s + 0.6, s + 0.72, d) }}>
-              {b.cells.map((c) => (
-                <rect key={c.x} x={c.x + 0.5} y={y + 0.5} width={c.cols * C} height={h} stroke={EDGE} fill="none" />
-              ))}
-            </G>
-          </g>
-        );
-      })}
+
+      {/* sections already on the page */}
+      <path d={cellsPath(PAGE.x, SLOT.hero.y, 24, 5) + cellsPath(PAGE.x, SLOT.logos.y, 24, 1) + cellsPath(PAGE.x, SLOT.cta.y, 24, 3)} stroke={GRID} fill="none" />
+
+      {/* existing cards narrow and shift — cells stay square, the card is clipped */}
+      {CARDS3.map((x3, i) => (
+        <G key={i} t={{ x: ab(x3, CARDS4[i], 0.4, 1.3, d) }}>
+          <defs>
+            <clipPath id={`bc${i}`}>
+              <R t={{ width: ab(CARD_W3 + 1, CARD_W4 + 1, 0.4, 1.3, d) }} x={0} y={y} height={h + 1} />
+            </clipPath>
+          </defs>
+          <path d={cellsPath(0, y, 7, 4)} stroke={GRID} fill="none" clipPath={`url(#bc${i})`} />
+          <R t={{ width: ab(CARD_W3, CARD_W4, 0.4, 1.3, d) }} x={0.5} y={y + 0.5} height={h} stroke={GRID} fill="none" />
+        </G>
+      ))}
+
+      {/* the new card: AI marks the free slot (dashed), fills it, then it settles (solid) */}
+      <G t={{ opacity: [[0, 0], [1.2, 0], [1.4, 1], [2.3, 1], [2.45, 0], [d, 0]] }}>
+        <EdgeBox x={CARDS4[3]} y={y} w={CARD_W4} h={h} dashed />
+      </G>
+      <G t={{ opacity: ab(0, 1, 1.5, 2.0, d) }}>
+        <path d={cellsPath(CARDS4[3], y, 5, 4)} stroke={GRID} fill="none" />
+      </G>
+      <G t={{ opacity: ab(0, 1, 2.3, 2.45, d) }}>
+        <rect x={CARDS4[3] + 0.5} y={y + 0.5} width={CARD_W4} height={h} stroke={EDGE} fill="none" />
+      </G>
     </>
   );
 }
@@ -208,6 +210,7 @@ function BuildPanel() {
 
 const BAR = "#5a5a5a";
 const BLOCK = { fill: "#252525", stroke: "#333" };
+const leftGrow = { transformBox: "fill-box" as const, originX: 0, originY: 0.5 };
 
 function ReviewPanel() {
   const d = useDur();
@@ -237,31 +240,28 @@ function ReviewPanel() {
       {/* page frame: dim while draft, lit once live (stays lit) */}
       <R t={{ stroke: ab("#2e2e2e", EDGE, 5.2, 5.7, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
 
-      {/* hero — the headline gets rewritten */}
+      {/* hero — a two-line headline gets rewritten, the paragraph stays */}
       <rect x="40.5" y="48.5" width="240" height="50" {...BLOCK} />
-      <R
-        t={{ scaleX: [[0, 1], [1.3, 1], [1.5, 0], [2.1, 0.7], [d, 0.7]] }}
-        linear={["scaleX"]}
-        x={52} y={62} width={150} height={6} fill={BAR}
-        style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }}
-      />
-      <rect x="52" y="74" width="96" height="6" fill={BAR} />
+      <R t={{ scaleX: [[0, 1], [1.3, 1], [1.45, 0], [1.85, 0.82], [d, 0.82]] }} linear={["scaleX"]} x={50} y={56} width={160} height={5} fill={BAR} style={leftGrow} />
+      <R t={{ scaleX: [[0, 1], [1.3, 1], [1.45, 0], [1.85, 0], [2.15, 1.2], [d, 1.2]] }} linear={["scaleX"]} x={50} y={65} width={90} height={5} fill={BAR} style={leftGrow} />
+      {[0, 1, 2].map((j) => <rect key={j} x="50" y={78 + j * 5} width={[170, 156, 118][j]} height="2" fill={BAR} />)}
       <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.3, 1], [2.5, 0], [d, 0]] }}>
-        <EdgeBox x={47} y={56} w={160} h={30} />
+        <EdgeBox x={46} y={52} w={170} h={22} />
       </G>
 
       {/* cards move up as the logo row is dragged below them */}
       <G t={{ y: ab(0, -22, 2.9, 3.7, d) }}>
-        {CARD_X.map((x) => (
+        {CARDS4.map((x) => (
           <g key={x}>
-            <rect x={x + 0.5} y="132.5" width="70" height="40" {...BLOCK} />
-            <rect x={x + 8} y="150" width="40" height="3" fill={BAR} />
+            <rect x={x + 0.5} y="132.5" width={CARD_W4} height="40" {...BLOCK} />
+            <rect x={x + 6} y="140" width="30" height="3" fill={BAR} />
+            {[0, 1, 2].map((j) => <rect key={j} x={x + 6} y={148 + j * 5} width={[38, 34, 26][j]} height="2" fill={BAR} />)}
           </g>
         ))}
       </G>
       <G t={{ y: ab(0, 52, 2.9, 3.7, d) }}>
         <rect x="40.5" y="110.5" width="240" height="10" {...BLOCK} />
-        {[0, 1, 2, 3].map((i) => <rect key={i} x={58 + i * 58} y="114" width="28" height="3" fill={BAR} />)}
+        {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={52 + i * 46} y="114" width="26" height="3" fill={BAR} />)}
         <G t={{ opacity: [[0, 0], [2.75, 0], [2.85, 1], [3.8, 1], [4.0, 0], [d, 0]] }}>
           <EdgeBox x={40} y={110} w={240} h={10} />
         </G>
@@ -269,7 +269,9 @@ function ReviewPanel() {
 
       {/* cta */}
       <rect x="40.5" y="184.5" width="240" height="30" {...BLOCK} />
-      <rect x="52" y="198" width="80" height="3" fill={BAR} />
+      <rect x="50" y="192" width="110" height="4" fill={BAR} />
+      <rect x="50" y="201" width="80" height="2" fill={BAR} />
+      <rect x="232.5" y="192.5" width="38" height="13" stroke={BAR} fill="none" />
 
       {/* goes live: light sweep across the page */}
       <defs>
@@ -284,7 +286,7 @@ function ReviewPanel() {
       </defs>
       <g mask={`url(#hm${id})`} stroke="#bdbdbd" fill="none">
         <rect x="40.5" y="48.5" width="240" height="50" />
-        {CARD_X.map((x) => <rect key={x} x={x + 0.5} y="110.5" width="70" height="40" />)}
+        {CARDS4.map((x) => <rect key={x} x={x + 0.5} y="110.5" width={CARD_W4} height="40" />)}
         <rect x="40.5" y="162.5" width="240" height="10" />
         <rect x="40.5" y="184.5" width="240" height="30" />
       </g>
@@ -292,8 +294,8 @@ function ReviewPanel() {
       {/* the person: edits the headline, drags the logo row down, flips the switch */}
       <G
         t={{
-          x: [[0, 300], [0.4, 300], [1.15, 130], [2.2, 130], [2.75, 170], [3.7, 170], [4.7, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.15, 66], [2.2, 66], [2.75, 116], [2.9, 116], [3.7, 168], [4.7, 18], [d, 18]],
+          x: [[0, 300], [0.4, 300], [1.15, 120], [2.2, 120], [2.75, 170], [3.7, 170], [4.7, 290], [d, 290]],
+          y: [[0, 236], [0.4, 236], [1.15, 62], [2.2, 62], [2.75, 116], [2.9, 116], [3.7, 168], [4.7, 18], [d, 18]],
           opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
           scale: [[0, 1], [1.15, 1], [1.22, 0.82], [1.32, 1], [2.75, 1], [2.82, 0.85], [3.7, 0.85], [3.8, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
         }}
@@ -326,12 +328,13 @@ export function ProductFragments() {
     <div ref={ref} className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
       {PANELS.map((Panel, i) => {
         const idx = i as Phase;
-        const mode: Mode = !reduce && phase === idx ? "play" : "after";
+        // rest states are never empty: before = the page as it was, after = with the change
+        const mode: Mode = reduce || phase > idx ? "after" : phase === idx ? "play" : "before";
         return (
           <Step key={i} index={idx} phase={reduce ? 3 : phase} cycle={cycle}>
             <div className={cn("relative aspect-[4/3] w-full border bg-[#1c1c1c] transition-colors duration-700", !reduce && phase === idx ? "border-[#4a4a4a]" : "border-dark-grey")}>
               <PanelCtx.Provider value={{ mode, dur: PHASE_S[idx] }}>
-                <svg key={`${cycle}-${mode}`} aria-hidden viewBox="0 0 320 240" fill="none" className={cn("absolute inset-0 h-full w-full transition-opacity duration-700", mode === "play" || reduce ? "opacity-100" : "opacity-45")}>
+                <svg aria-hidden viewBox="0 0 320 240" fill="none" className={cn("absolute inset-0 h-full w-full transition-opacity duration-700", mode === "play" || reduce ? "opacity-100" : "opacity-45")}>
                   <Panel />
                 </svg>
               </PanelCtx.Provider>

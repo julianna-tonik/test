@@ -11,7 +11,6 @@ import { Reveal, SectionLabel } from "./shared";
  */
 const D = "#383838";
 const G = "#666666";
-const N = "#888888";
 const PERIOD = 9; // s, whole cycle across the six icons
 const io = [0.65, 0, 0.35, 1] as const;
 
@@ -39,81 +38,67 @@ function Drift({ i, on, to, style, children }: { i: number; on: boolean; to: Rec
 }
 
 type IconFn = (on: boolean) => React.ReactNode;
+// Vibe Fixer level of abstraction: one dark base shape (#383838) + one grey idea (#666).
 const icons: IconFn[] = [
-  // Launch campaigns faster — a brief (lines) goes into a page and becomes a draft
+  // Launch campaigns faster — a brief (speed lines) pushes a page forward
   (on) => (
     <>
-      <rect x="40.5" y="18.5" width="30" height="46" stroke={D} />
-      <rect x="45.5" y="24.5" width="20" height="10" stroke={G} strokeDasharray="2.5 2" />
-      <rect x="45.5" y="39.5" width="20" height="19" stroke={G} strokeDasharray="2.5 2" />
-      <Drift i={0} on={on} to={{ x: 14, opacity: 0 }}>
-        <path d="M12 33H32M12 40H28M12 47H32" stroke={G} />
+      <rect x="20.5" y="28.5" width="36" height="36" stroke={D} />
+      <path d="M6 37H18M10 44H18M6 51H18" stroke={G} />
+      <Drift i={0} on={on} to={{ x: 4, y: -4 }}>
+        <rect x="38.5" y="14.5" width="30" height="30" stroke={G} />
       </Drift>
     </>
   ),
-  // Adapt campaigns for each audience — one page branches into versions
+  // Adapt campaigns for each audience — one page, versions in other sizes
   (on) => (
     <>
-      <rect x="12.5" y="28.5" width="22" height="28" stroke={D} />
-      <path d="M35 42.5H42M42 20.5V64.5M42 20.5H48M42 42.5H48M42 64.5H48" stroke={D} />
+      <rect x="12.5" y="24.5" width="36" height="36" stroke={D} />
       <Drift i={1} on={on} to={{ x: 3 }}>
-        <rect x="48.5" y="14.5" width="22" height="13" stroke={G} />
-        <rect x="48.5" y="36.5" width="22" height="13" stroke={G} />
-        <rect x="48.5" y="58.5" width="22" height="13" stroke={G} />
+        <rect x="44.5" y="30.5" width="24" height="24" stroke={G} />
+        <rect x="64.5" y="36.5" width="12" height="12" stroke={G} />
       </Drift>
     </>
   ),
-  // Test more ideas — A and B, measured: B's result grows
+  // Test more ideas — A and B; the focus moves between them
   (on) => (
     <>
-      <rect x="12.5" y="16.5" width="26" height="34" stroke={D} />
-      <rect x="45.5" y="16.5" width="26" height="34" stroke={D} />
-      <rect x="17.5" y="22.5" width="16" height="6" stroke={G} />
-      <rect x="50.5" y="22.5" width="16" height="10" stroke={G} />
-      <rect x="12.5" y="60.5" width="14" height="4" stroke={G} />
-      <Drift i={2} on={on} to={{ scaleX: 1.35 }} style={{ originX: 0 }}>
-        <rect x="45.5" y="60.5" width="20" height="4" fill={G} />
+      <rect x="12.5" y="24.5" width="26" height="36" stroke={D} />
+      <rect x="45.5" y="24.5" width="26" height="36" stroke={D} />
+      <Drift i={2} on={on} to={{ x: -33 }}>
+        <circle cx="58.5" cy="42.5" r="11" stroke={G} />
       </Drift>
     </>
   ),
-  // Keep every page on-brand — every page shares the same approved structure
+  // Keep every page on-brand — pages held by the same line
   (on) => (
     <>
-      {[12, 33, 54].map((x) => (
-        <g key={x}>
-          <rect x={x + 0.5} y="22.5" width="18" height="40" stroke={D} />
-          <rect x={x + 3.5} y="26.5" width="12" height="8" stroke={G} />
-          <rect x={x + 3.5} y="38.5" width="12" height="4" stroke={G} />
-        </g>
-      ))}
-      <Drift i={3} on={on} to={{ opacity: 0 }}>
-        <path d="M8 30.5H76" stroke={N} strokeDasharray="2 2.5" />
+      <rect x="10.5" y="30.5" width="20" height="24" stroke={D} />
+      <rect x="32.5" y="30.5" width="20" height="24" stroke={D} />
+      <rect x="54.5" y="30.5" width="20" height="24" stroke={D} />
+      <Drift i={3} on={on} to={{ opacity: 0.2 }}>
+        <path d="M4 38.5H80" stroke={G} />
       </Drift>
     </>
   ),
-  // Reuse your strongest content — one proven block placed into more pages
+  // Reuse your strongest content — the same block, again
   (on) => (
     <>
-      <rect x="12.5" y="35.5" width="14" height="14" stroke={G} />
-      <rect x="16" y="39" width="7" height="7" fill={G} />
-      <path d="M27 42.5H34M34 24.5V60.5M34 24.5H42M34 60.5H42" stroke={D} />
-      <rect x="42.5" y="12.5" width="28" height="24" stroke={D} />
-      <rect x="49" y="19" width="7" height="7" fill={G} />
-      <rect x="42.5" y="48.5" width="28" height="24" stroke={D} />
-      <Drift i={4} on={on} to={{ opacity: 0.15 }}>
-        <rect x="49" y="55" width="7" height="7" fill={G} />
+      <rect x="12.5" y="28.5" width="28" height="28" stroke={D} />
+      <rect x="44.5" y="28.5" width="28" height="28" stroke={D} />
+      <rect x="20.5" y="36.5" width="12" height="12" stroke={G} />
+      <Drift i={4} on={on} to={{ opacity: 0.1 }}>
+        <rect x="52.5" y="36.5" width="12" height="12" stroke={G} />
       </Drift>
     </>
   ),
-  // Review and publish with confidence — the page goes live when you switch it
+  // Review and publish with confidence — a page and its switch
   (on) => (
     <>
-      <rect x="18.5" y="12.5" width="48" height="40" stroke={D} />
-      <rect x="24.5" y="19.5" width="28" height="5" stroke={G} />
-      <rect x="24.5" y="29.5" width="18" height="5" stroke={G} />
-      <rect x="30.5" y="60.5" width="24" height="12" rx="6" stroke={G} />
-      <Drift i={5} on={on} to={{ x: 12 }}>
-        <circle cx="36.5" cy="66.5" r="3.5" fill={N} />
+      <rect x="22.5" y="14.5" width="40" height="40" stroke={D} />
+      <rect x="26.5" y="62.5" width="32" height="12" rx="6" stroke={G} />
+      <Drift i={5} on={on} to={{ x: 18 }}>
+        <circle cx="33" cy="68.5" r="3.5" stroke={G} />
       </Drift>
     </>
   ),

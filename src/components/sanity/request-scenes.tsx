@@ -71,26 +71,15 @@ const cellsPath = (x: number, y: number, cols: number, rows: number) => {
   return d;
 };
 
+const rr = (x: number, y: number, w: number, h: number) => `M${x + 0.5} ${y + 0.5}h${w}v${h}h${-w}Z`;
+
 /** Grid block; the background fill keeps overlapping outlines clean when blocks move. */
-function Cells({ x, y, cols, rows, stroke = GRID, label, labelColor }: { x: number; y: number; cols: number; rows: number; stroke?: string; label?: string; labelColor?: string }) {
+function Cells({ x, y, cols, rows, stroke = GRID }: { x: number; y: number; cols: number; rows: number; stroke?: string }) {
   return (
     <>
       <rect x={x + 0.5} y={y + 0.5} width={cols * C} height={rows * C} fill={BG} />
       <path d={cellsPath(x, y, cols, rows)} stroke={stroke} strokeWidth="1" fill="none" />
-      {label && <Label x={x} y={y} color={labelColor}>{label}</Label>}
     </>
-  );
-}
-
-/** Section name, as in the V1 section library (HERO, SPEAKERS, STORIES…). */
-function Label({ x, y, children, color = MUTED }: { x: number; y: number; children: string; color?: string }) {
-  return (
-    <g>
-      <rect x={x + 2} y={y + 2} width={children.length * 4.6 + 5} height="9" fill={BG} />
-      <text x={x + 4.5} y={y + 9} fill={color} fontSize="7" letterSpacing="-0.1" style={{ fontFamily: "var(--font-mono)" }}>
-        {children}
-      </text>
-    </g>
   );
 }
 
@@ -137,18 +126,9 @@ function Glint({ id, boxes, at = 5 }: { id: string; boxes: Box[]; at?: number })
           <R t={{ x: [[0, -180], [at, -180], [at + 1.2, 500], [D, 500]] }} y={0} width={140} height={204} fill={`url(#g${id})`} />
         </mask>
       </defs>
-      <path mask={`url(#m${id})`} d={boxes.map((b) => cellsPath(...b)).join("")} stroke="#b0b0b0" strokeWidth="1" fill="none" />
+      <path mask={`url(#m${id})`} d={boxes.map(([bx, by, bc, br]) => rr(bx, by, bc * C, br * C)).join("")} stroke="#b0b0b0" strokeWidth="1" fill="none" />
     </>
   );
-}
-
-function Tag({ x, y, children, t, color = MUTED }: { x: number; y: number; children: string; t?: Track; color?: string }) {
-  const text = (
-    <text x={x} y={y} fill={color} fontSize="9" letterSpacing="-0.2" style={{ fontFamily: "var(--font-mono)" }}>
-      {children}
-    </text>
-  );
-  return t ? <G t={{ opacity: t }}>{text}</G> : text;
 }
 
 function Lock({ x, y }: { x: number; y: number }) {
@@ -168,24 +148,22 @@ const FADE: Track = [[0, 1], [6.25, 1], [6.5, 0], [6.75, 0], [D, 1]];
 function SceneEvent() {
   const L = 16, P = 272, dx = P - L;
   const picks = [
-    { y: 20, cols: 16, rows: 3, to: 40, label: "HERO" },
-    { y: 64, cols: 8, rows: 3, to: 84, label: "SPEAKERS" },
-    { y: 108, cols: 10, rows: 3, to: 128, label: "STORIES" },
-  ];
+    { y: 20, cols: 16, rows: 3, to: 40, label: "HERO", kind: "hero" },
+    { y: 64, cols: 8, rows: 3, to: 84, label: "SPEAKERS", kind: "people" },
+    { y: 108, cols: 10, rows: 3, to: 128, label: "STORIES", kind: "quote" },
+  ] as const;
   return (
     <G t={{ opacity: FADE }}>
-      <Tag x={L} y={10}>APPROVED SECTIONS</Tag>
-      <Tag x={P} y={10}>NEW PAGE</Tag>
 
       {/* library */}
-      <Cells x={L} y={20} cols={16} rows={3} label="HERO" />
-      <Cells x={L} y={64} cols={8} rows={3} label="SPEAKERS" />
-      <Cells x={L + 9 * C} y={64} cols={7} rows={3} label="LOGOS" />
-      <Cells x={L} y={108} cols={10} rows={3} label="STORIES" />
-      <Cells x={L + 11 * C} y={108} cols={5} rows={3} label="STATS" />
-      <Cells x={L} y={152} cols={6} rows={2} label="FORM" />
-      <Cells x={L + 7 * C} y={152} cols={9} rows={2} label="SCHEDULE" />
-      <Cells x={L} y={184} cols={16} rows={1} label="FEATURES" />
+      <Cells x={L} y={20} cols={16} rows={3} />
+      <Cells x={L} y={64} cols={8} rows={3} />
+      <Cells x={L + 9 * C} y={64} cols={7} rows={3} />
+      <Cells x={L} y={108} cols={10} rows={3} />
+      <Cells x={L + 11 * C} y={108} cols={5} rows={3} />
+      <Cells x={L} y={152} cols={6} rows={2} />
+      <Cells x={L + 7 * C} y={152} cols={9} rows={2} />
+      <Cells x={L} y={184} cols={16} rows={1} />
 
       {/* page from the template: frame + nav */}
       <rect x={P + 0.5} y={20.5} width={16 * C} height={176} stroke="#333" fill="none" />
@@ -198,7 +176,6 @@ function SceneEvent() {
           <G key={i} t={{ x: ev(0, dx, s + 0.6, s + 1.4), y: ev(0, p.to - p.y, s + 0.6, s + 1.4), opacity: show(s, 0.3) }}>
             <rect x={L + 0.5} y={p.y + 0.5} width={p.cols * C} height={p.rows * C} fill={BG} />
             <path d={cellsPath(L, p.y, p.cols, p.rows)} stroke={CHANGED_CELL} strokeWidth="1" fill="none" />
-            <Label x={L} y={p.y} color="#efefef">{p.label}</Label>
             <Edge x={L} y={p.y} cols={p.cols} rows={p.rows} dashed t={pulse(s, s + 1.4)} />
             <Edge x={L} y={p.y} cols={p.cols} rows={p.rows} color={CHANGED_EDGE} nodes={false} t={show(s + 1.5)} />
           </G>
@@ -207,10 +184,6 @@ function SceneEvent() {
 
       <Glint id="event" boxes={[[P, 20, 16, 1], ...picks.map((p): Box => [P, p.to, p.cols, p.rows])]} />
 
-      <G t={{ opacity: show(5) }}>
-        <rect x={P + 0.5} y={172.5} width="44" height="16" stroke={CHANGED_EDGE} strokeWidth="1" fill={BG} />
-        <Tag x={P + 8} y={183.5} color="#efefef">DRAFT</Tag>
-      </G>
     </G>
   );
 }
@@ -222,21 +195,21 @@ function SceneReport() {
   return (
     <G t={{ opacity: FADE }}>
       <Cells x={X} y={6} cols={W} rows={1} />
-      <Cells x={X} y={24} cols={W} rows={2} label="HERO" />
+      <Cells x={X} y={24} cols={W} rows={2} />
 
       {/* customer proof drops a slot, findings move to the top */}
       <G t={{ y: ev(0, 44, 1.2, 2) }}>
-        <Cells x={X} y={56} cols={W} rows={3} label="STORIES" />
+        <Cells x={X} y={56} cols={W} rows={3} />
       </G>
       <G t={{ y: ev(0, -44, 1.2, 2) }}>
-        <Cells x={X} y={100} cols={W} rows={3} label="FINDINGS" />
+        <Cells x={X} y={100} cols={W} rows={3} />
         <Changed x={X} y={100} cols={W} rows={3} t={show(2)} />
         <Edge x={X} y={100} cols={W} rows={3} dashed t={pulse(0.6, 2.0)} />
       </G>
 
       {/* gated report: dims and locks behind the form, opens after the email */}
       <G t={{ opacity: [[0, 1], [2.4, 1], [2.8, 0.3], [4.1, 0.3], [4.4, 1], [D, 1]] }}>
-        <Cells x={X} y={164} cols={W} rows={3} label="REPORT" />
+        <Cells x={X} y={164} cols={W} rows={3} />
       </G>
       <Changed x={X} y={164} cols={W} rows={3} t={show(4.2)} />
       <G t={{ opacity: [[0, 0], [2.6, 0], [2.9, 1], [4.0, 1], [4.3, 0], [D, 0]] }}>
@@ -269,7 +242,6 @@ function SceneReport() {
         <Node x={456.5} y={24.5} />
         <Node x={318.5} y={174.5} />
         <Node x={456.5} y={174.5} />
-        <Tag x={318} y={190}>STAGING PREVIEW</Tag>
       </G>
 
       <Glint id="report" boxes={[[X, 6, W, 1], [X, 24, W, 2], [X, 56, W, 3], [X, 100, W, 3], [X, 164, W, 3]]} at={5.1} />
@@ -310,8 +282,8 @@ function SceneHomepage() {
   return (
     <G t={{ opacity: FADE }}>
       {/* protected by your rules: navigation + legal */}
-      <Cells x={X} y={6} cols={W} rows={1} label="NAVIGATION" />
-      <Cells x={X} y={178} cols={W} rows={1} label="LEGAL" />
+      <Cells x={X} y={6} cols={W} rows={1} />
+      <Cells x={X} y={178} cols={W} rows={1} />
       <Edge x={X} y={6} cols={W} rows={1} t={show(0.4)} />
       <Edge x={X} y={178} cols={W} rows={1} t={show(0.4)} />
       <G t={{ opacity: show(0.4) }}>
@@ -320,7 +292,7 @@ function SceneHomepage() {
       </G>
 
       {/* hero headline: replaced */}
-      <Cells x={X} y={26} cols={W} rows={3} label="HERO" />
+      <Cells x={X} y={26} cols={W} rows={3} />
       {NOISE_HOME.map((n, i) => (
         <R key={i} t={{ opacity: n.t }} x={X + n.k * C + 1} y={26 + n.row * C + 1} width={C - 1} height={C - 1} fill={n.fill} />
       ))}
@@ -329,16 +301,16 @@ function SceneHomepage() {
 
       {/* product tour slides down, customer logos move above it */}
       <G t={{ y: ev(0, 20, 3.4, 4.2) }}>
-        <Cells x={X} y={70} cols={W} rows={3} label="PRODUCT TOUR" />
+        <Cells x={X} y={70} cols={W} rows={3} />
       </G>
       <G t={{ y: ev(0, -44, 3.4, 4.2) }}>
-        <Cells x={X} y={114} cols={W} rows={1} label="LOGOS" />
+        <Cells x={X} y={114} cols={W} rows={1} />
         <Changed x={X} y={114} cols={W} rows={1} t={show(4.2)} />
         <Edge x={X} y={114} cols={W} rows={1} dashed t={pulse(3.0, 4.2)} />
       </G>
 
       {/* quote: swapped */}
-      <Cells x={X} y={134} cols={W} rows={3} label="QUOTE" />
+      <Cells x={X} y={134} cols={W} rows={3} />
       <R t={{ scaleX: ev(0, 1, 4.8, 5.4) }} x={X + 0.5} y={134.5} width={W * C} height={36} fill="#2a2a2a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
       <Changed x={X} y={134} cols={W} rows={3} t={show(5.3)} />
       <Edge x={X} y={134} cols={W} rows={3} dashed t={pulse(4.5, 5.5)} />
@@ -369,7 +341,7 @@ function Page({ variant }: { variant: "A" | "B" }) {
       <Cells x={0} y={6} cols={14} rows={1} />
       <Cells x={0} y={26} cols={14} rows={3} />
       <Cells x={0} y={70} cols={14} rows={4} />
-      <Cells x={0} y={126} cols={5} rows={1} label="REGISTER" />
+      <Cells x={0} y={126} cols={5} rows={1} />
       <Cells x={0} y={146} cols={14} rows={1} />
       {b && (
         <>
@@ -388,7 +360,6 @@ function Page({ variant }: { variant: "A" | "B" }) {
         </>
       )}
       <G t={{ opacity: show(SPLIT[1]) }}>
-        <Tag x={0} y={184} color={b ? "#efefef" : MUTED}>{variant}</Tag>
         {Array.from({ length: METER }).map((_, k) => (
           <rect key={k} x={14.5 + k * 10} y={176.5} width="7" height="7" stroke={GRID} strokeWidth="1" fill="none" />
         ))}
@@ -406,7 +377,6 @@ function SceneAB() {
     <G t={{ opacity: FADE }}>
       <G t={{ opacity: show(SPLIT[1]) }}>
         <line x1="240.5" y1="10" x2="240.5" y2="160" stroke={GRID} strokeWidth="1" strokeDasharray="2 3" />
-        <Tag x={227} y={184}>50/50</Tag>
       </G>
 
       <G t={{ x: ev(cx, ax, ...SPLIT) }}>
@@ -489,13 +459,7 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
   );
 }
 
-/** Edits a person makes on the live Webflow site during the migration (the one at col 4 gets re-imported). */
-const EDITS = [
-  { col: 22, row: 1, t: 0.9 },
-  { col: 14, row: 0, t: 1.9 },
-  { col: 26, row: 1, t: 3.0 },
-  { col: 8, row: 1, t: 4.3 },
-];
+
 
 export function MigrationLanes() {
   const ref = useRef<SVGSVGElement>(null);
@@ -527,19 +491,6 @@ export function MigrationLanes() {
         <rect x="0.5" y="112.5" width={30 * M} height={2 * M} stroke="#3a3a3a" strokeDasharray="2 3" fill="none" />
 
         <G t={{ opacity: FADE }}>
-          {/* no content freeze: the team keeps editing on the live site while content moves */}
-          {EDITS.map((e, i) => (
-            <G key={i} t={{ opacity: pulse(e.t, e.t + 0.7) }}>
-              <rect x={e.col * M + 0.5} y={22 + e.row * M + 0.5} width={M} height={M} stroke={SEL} fill="none" />
-              <rect x={e.col * M + 7} y={22 + e.row * M + 7} width="7" height="7" fill={SEL} />
-            </G>
-          ))}
-          {/* …and keeps editing in Sanity after the switch */}
-          <G t={{ opacity: [[0, 0], [5.95, 0], [6.1, 1], [D, 1]] }}>
-            <rect x={13 * M + 0.5} y={113.5} width={M} height={M} stroke={SEL} fill="none" />
-            <rect x={13 * M + 7} y={120} width="7" height="7" fill={SEL} />
-          </G>
-
           <Import col={0} cols={10} s={0.4} />
           <Import col={10} cols={8} s={1.5} />
           <Import col={18} cols={12} s={4.0} />
@@ -556,9 +507,21 @@ export function MigrationLanes() {
           </G>
 
           {/* content changes on the live site (a person edits) → re-imported, no freeze */}
-          <G t={{ opacity: pulse(2.6, 3.4) }}>
-            <rect x={4 * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill="none" />
-            <rect x={4 * M + 7} y={29} width="7" height="7" fill={SEL} />
+          {/* a person edits one piece of content on the live site (cursor = a person, as in the hero) */}
+          <G t={{ opacity: [[0, 0], [2.65, 0], [2.7, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
+            <rect x={4 * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill={BG} />
+            <rect x={4 * M + 6} y={28} width="9" height="2" fill={SEL} />
+            <rect x={4 * M + 6} y={33} width="6" height="2" fill={SEL} />
+          </G>
+          <G
+            t={{
+              x: [[0, 190], [1.9, 190], [2.55, 94], [3.1, 94], [3.5, 130], [D, 130]],
+              y: [[0, 70], [1.9, 70], [2.55, 34], [3.1, 34], [3.5, 60], [D, 60]],
+              opacity: [[0, 0], [1.9, 0], [2.05, 1], [3.2, 1], [3.5, 0], [D, 0]],
+              scale: [[0, 1], [2.55, 1], [2.62, 0.82], [2.72, 1], [D, 1]],
+            }}
+          >
+            <path d="M0 0L13 7.8L7 9L4.2 14.8Z" fill={SEL} stroke={BG} strokeWidth="1" strokeLinejoin="round" />
           </G>
           <G t={{ opacity: pulse(3.3, 4.2) }}>
             <line x1={4.5 * M + 0.5} y1="64" x2={4.5 * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
