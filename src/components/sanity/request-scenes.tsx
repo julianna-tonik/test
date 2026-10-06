@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { easeOut } from "./shared";
 
@@ -463,14 +463,33 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
 
 
 
+/** True below the `sm` breakpoint (after mount; SSR renders the desktop layout). */
+function useNarrow() {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const on = () => setNarrow(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return narrow;
+}
+
 export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { margin: "-20% 0px" });
   const reduce = !!useReducedMotion() || !!snapshot;
   const on = inView && !reduce;
+  const narrow = useNarrow();
+  // narrow screens: half the columns, so the labels stay readable
+  const N = narrow ? 15 : 30, E = narrow ? 2 : 4;
+  const imports = narrow ? [[0, 5, 0.4], [5, 4, 1.5], [9, 6, 4.0]] : [[0, 10, 0.4], [10, 8, 1.5], [18, 12, 4.0]];
+  const labels = ["IMPORT 01", "IMPORT 02", "IMPORT 03"];
+  const at = [1.6, 2.7, 5.2];
   return (
     <Ctx.Provider value={{ on, reduce }}>
-      <svg aria-hidden ref={ref} viewBox="0 0 620 196" fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
+      <svg aria-hidden ref={ref} viewBox={narrow ? "0 0 301 196" : "0 0 620 196"} fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
         {/* labels: "live" moves from Webflow to Sanity at the cutover */}
         <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.5, 0.4], [6.62, 1], [D, 1]] }}>
           <text x="0" y="11" fill={MUTED} fontSize="11">WEBFLOW</text>
@@ -485,39 +504,32 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
 
         {/* Webflow lane — dims after the cutover */}
         <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.5, 0.4], [6.62, 1], [D, 1]] }}>
-          <rect x="0.5" y="22.5" width={30 * M} height={2 * M} fill={BG} />
-          <path d={mPath(0, 22, 30, 2)} stroke={GRID} fill="none" />
+          <rect x="0.5" y="22.5" width={N * M} height={2 * M} fill={BG} />
+          <path d={mPath(0, 22, N, 2)} stroke={GRID} fill="none" />
         </G>
 
         {/* Sanity lane: empty slots, filled in stages */}
-        <rect x="0.5" y="112.5" width={30 * M} height={2 * M} stroke="#3a3a3a" strokeDasharray="2 3" fill="none" />
+        <rect x="0.5" y="112.5" width={N * M} height={2 * M} stroke="#3a3a3a" strokeDasharray="2 3" fill="none" />
 
         <G t={{ opacity: FADE }}>
-          <Import col={0} cols={10} s={0.4} />
-          <Import col={10} cols={8} s={1.5} />
-          <Import col={18} cols={12} s={4.0} />
-          <G t={{ opacity: show(1.6) }}>
-            <text x="0" y="170" fill={MUTED} fontSize="10">IMPORT 01</text>
-          </G>
-          <G t={{ opacity: show(2.7) }}>
-            <line x1="200.5" y1="106" x2="200.5" y2="158" stroke={GRID} />
-            <text x="206" y="170" fill={MUTED} fontSize="10">IMPORT 02</text>
-          </G>
-          <G t={{ opacity: show(5.2) }}>
-            <line x1="360.5" y1="106" x2="360.5" y2="158" stroke={GRID} />
-            <text x="366" y="170" fill={MUTED} fontSize="10">IMPORT 03</text>
-          </G>
+          {imports.map(([col, cols, s]) => <Import key={col} col={col} cols={cols} s={s} />)}
+          {labels.map((l, i) => (
+            <G key={l} t={{ opacity: show(at[i]) }}>
+              {i > 0 && <line x1={imports[i][0] * M + 0.5} y1="106" x2={imports[i][0] * M + 0.5} y2="158" stroke={GRID} />}
+              <text x={i === 0 ? 0 : imports[i][0] * M + 6} y="170" fill={MUTED} fontSize="10">{l}</text>
+            </G>
+          ))}
 
           {/* content changes on the live site (a person edits) → re-imported, no freeze */}
           {/* a person edits one piece of content on the live site (cursor = a person, as in the hero) */}
           <G t={{ opacity: [[0, 0], [2.65, 0], [2.7, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
-            <rect x={4 * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill={BG} />
-            <rect x={4 * M + 6} y={28} width="9" height="2" fill={SEL} />
-            <rect x={4 * M + 6} y={33} width="6" height="2" fill={SEL} />
+            <rect x={E * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill={BG} />
+            <rect x={E * M + 6} y={28} width="9" height="2" fill={SEL} />
+            <rect x={E * M + 6} y={33} width="6" height="2" fill={SEL} />
           </G>
           <G
             t={{
-              x: [[0, 190], [1.9, 190], [2.55, 94], [3.1, 94], [3.5, 130], [D, 130]],
+              x: [[0, E * M + 110], [1.9, E * M + 110], [2.55, E * M + 14], [3.1, E * M + 14], [3.5, E * M + 50], [D, E * M + 50]],
               y: [[0, 70], [1.9, 70], [2.55, 34], [3.1, 34], [3.5, 60], [D, 60]],
               opacity: [[0, 0], [1.9, 0], [2.05, 1], [3.2, 1], [3.5, 0], [D, 0]],
               scale: [[0, 1], [2.55, 1], [2.62, 0.82], [2.72, 1], [D, 1]],
@@ -526,16 +538,16 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
             <path d="M0 0L13 7.8L7 9L4.2 14.8Z" fill={SEL} stroke={BG} strokeWidth="1" strokeLinejoin="round" />
           </G>
           <G t={{ opacity: pulse(3.3, 4.2) }}>
-            <line x1={4.5 * M + 0.5} y1="64" x2={4.5 * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
+            <line x1={(E + 0.5) * M + 0.5} y1="64" x2={(E + 0.5) * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
           </G>
           <G t={{ y: ev(0, 90, 3.4, 4.0), opacity: [[0, 0], [3.3, 0], [3.4, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
-            <rect x={4 * M + 0.5} y={22.5} width={M} height={M} fill={BG} stroke={SEL} strokeDasharray="3 2" />
+            <rect x={E * M + 0.5} y={22.5} width={M} height={M} fill={BG} stroke={SEL} strokeDasharray="3 2" />
           </G>
           <G t={{ opacity: show(4.0) }}>
-            <rect x={4 * M + 0.5} y={112.5} width={M} height={M} stroke={SEL} fill="none" />
+            <rect x={E * M + 0.5} y={112.5} width={M} height={M} stroke={SEL} fill="none" />
           </G>
           <G t={{ opacity: pulse(3.4, 5.2) }}>
-            <text x={4 * M + 26} y="86" fill={SEL} fontSize="10">RE-IMPORT</text>
+            <text x={E * M + 26} y="86" fill={SEL} fontSize="10">RE-IMPORT</text>
           </G>
         </G>
       </svg>
