@@ -412,12 +412,12 @@ function SceneAB() {
 
 const SCENES = [SceneEvent, SceneReport, SceneHomepage, SceneAB];
 
-export function RequestScene({ index, active, snapshot }: { index: number; active: boolean; snapshot?: boolean }) {
+export function RequestScene({ index, active, snapshot, fit }: { index: number; active: boolean; snapshot?: boolean; fit?: boolean }) {
   const reduce = !!useReducedMotion() || !!snapshot;
   const Scene = SCENES[index];
   return (
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
-      <svg aria-hidden viewBox="0 0 480 204" fill="none" className="block h-auto w-full overflow-visible">
+      <svg aria-hidden viewBox="0 0 480 204" fill="none" className={fit ? "absolute inset-0 h-full w-full overflow-visible" : "block h-auto w-full overflow-visible"}>
         <Scene />
       </svg>
     </Ctx.Provider>

@@ -5,29 +5,10 @@ import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { cn } from "@/lib/utils";
 import { ScrollText, SectionLabel } from "./shared";
 import { RequestScene } from "./request-scenes";
+import { examples } from "./examples-data";
+import { ExamplesPinned } from "./examples-pinned";
 
-export const examples = [
-  {
-    label: "NYC Security Summit",
-    request:
-      "“We're hosting the NYC Security Summit for enterprise security teams. Create the event page, feature this year's speakers and our strongest security customer proof, and save it as a draft.”",
-  },
-  {
-    label: "AI Governance Report",
-    request:
-      "“Create a landing page for our new AI governance report. Lead with the most important findings, include the strongest customer proof, collect work emails before download, and send me a staging preview.”",
-  },
-  {
-    label: "Homepage Campaign",
-    request:
-      "“Update the homepage for the security campaign. Replace the hero headline, move customer logos above the product tour, and swap in the Acme quote. Keep navigation and legal copy unchanged.”",
-  },
-  {
-    label: "Event Conversion",
-    request:
-      "“Keep the current event page as variant A. Create variant B with the new headline and registration CTA, then start a 50/50 PostHog test using completed registrations as the conversion.”",
-  },
-];
+
 
 const progressValues: Record<number, number> = { [-1]: 0, 0: 0.11, 1: 0.37, 2: 0.63, 3: 0.89, 4: 1 };
 
@@ -54,7 +35,12 @@ export function SanityExamples() {
       <SectionLabel>Example requests</SectionLabel>
       <ScrollText text="Ask for everyday work. Get a controlled result." className="py-[50px]" />
 
-      <div className="flex flex-col gap-10 md:flex-row">
+      {/* phones: the illustration and a 01 / 04 counter stay pinned, only the requests scroll */}
+      <div className="md:hidden">
+        <ExamplesPinned />
+      </div>
+
+      <div className="hidden flex-col gap-10 md:flex md:flex-row">
         {/* Sticky sidebar — Vibe Fixer pattern */}
         <div ref={sidebarRef} className="sticky top-[calc(50%-40px)] hidden h-fit flex-col gap-2 self-start px-6 md:flex">
           <div className="relative flex flex-col gap-2">
