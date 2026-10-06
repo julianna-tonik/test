@@ -574,14 +574,20 @@ const SCENES = [
   { Scene: SceneAB, l: AB },
 ];
 
-export function RequestScene({ index, active, snapshot }: { index: number; active: boolean; snapshot?: boolean }) {
+/** Height / width of example i's illustration (narrow = stacked phone layout). */
+export const sceneAspect = (index: number, narrow: boolean) => {
+  const [w, h] = SCENES[index].l[narrow ? "narrow" : "wide"].vb;
+  return h / w;
+};
+
+export function RequestScene({ index, active, snapshot, fit }: { index: number; active: boolean; snapshot?: boolean; fit?: boolean }) {
   const reduce = !!useReducedMotion() || !!snapshot;
   const narrow = useNarrow();
   const { Scene, l } = SCENES[index];
   const [w, h] = l[narrow ? "narrow" : "wide"].vb;
   return (
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
-      <svg key={narrow ? "n" : "w"} aria-hidden viewBox={`0 0 ${w} ${h}`} fill="none" className="block h-auto w-full overflow-visible">
+      <svg key={narrow ? "n" : "w"} aria-hidden viewBox={`0 0 ${w} ${h}`} fill="none" className={fit ? "absolute inset-0 h-full w-full overflow-visible" : "block h-auto w-full overflow-visible"}>
         <Scene narrow={narrow} />
       </svg>
     </Ctx.Provider>
