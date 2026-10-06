@@ -330,8 +330,9 @@ function EventPage({ x, y, w, h }: { x: number; y: number; w: number; h: number 
       {/* hero */}
       <Block x={cx} y={y + 74} w={cw} h={heroH} ai={aiWork(0.9, 1.7)}>
         <G t={{ opacity: appear(1.1) }}>
-          <Sans x={cx + 12} y={y + 74 + heroH / 2 + 1} size={13}>NYC Security Summit</Sans>
-          <rect x={cx + 12} y={y + 74 + heroH / 2 + 7.5} width="70" height="2.5" fill={BAR} />
+          <Sans x={cx + 12} y={y + 74 + heroH / 2 - 2} size={13}>NYC Security Summit</Sans>
+          <rect x={cx + 12} y={y + 74 + heroH / 2 + 4.5} width="70" height="2.5" fill={BAR} />
+          <rect x={cx + 12} y={y + 74 + heroH / 2 + 10} width="46" height="2.5" fill={BAR} />
         </G>
       </Block>
 

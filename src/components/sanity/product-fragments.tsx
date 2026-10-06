@@ -417,8 +417,17 @@ function AskLiteral() {
   );
 }
 
-const LIB = ["Hero", "Logos", "Speakers", "Stories", "Form"];
-const LIB_REST = ["Stats", "Schedule"];
+/** The library lists sections in its own order; they are picked in yet another order, Hero first. */
+const LIB_ORDER: { name: string; pick?: number }[] = [
+  { name: "Hero", pick: 0 },
+  { name: "Stories", pick: 3 },
+  { name: "Stats" },
+  { name: "Logos", pick: 2 },
+  { name: "Form", pick: 4 },
+  { name: "Speakers", pick: 1 },
+  { name: "Schedule" },
+];
+const pickAt = (n: number) => 0.2 + n * 0.6;
 const SLOTS: { name: string; y: number; h: number }[] = [
   { name: "Hero", y: 45, h: 29 },
   { name: "Logos", y: 82, h: 21 },
@@ -470,9 +479,9 @@ function BuildLiteral() {
       </Header>
 
       {/* approved section library — a picked chip's outline goes dashed, then fills */}
-      {[...LIB, ...LIB_REST].map((n, i) => {
-        const s = 0.2 + i * 0.6;
-        const picked = i < LIB.length;
+      {LIB_ORDER.map(({ name: n, pick }, i) => {
+        const s = pickAt(pick ?? 0);
+        const picked = pick !== undefined;
         const y = 45 + i * 22;
         return (
           <g key={n}>
@@ -497,8 +506,8 @@ function BuildLiteral() {
       })}
 
       {/* the event template fills up — sections shown as content, not names */}
-      {SLOTS.map((b, i) => {
-        const s = 0.35 + i * 0.6;
+      {SLOTS.map((b) => {
+        const s = pickAt(LIB_ORDER.find((l) => l.name === b.name)!.pick!) + 0.15;
         return (
           <Slot key={b.name} x={PX} y={b.y} w={PW} h={b.h} s={s}>
             {b.name === "Hero" && <SansT x={PX + 12} y={b.y + 18.5} size={11}>NYC Security Summit</SansT>}
