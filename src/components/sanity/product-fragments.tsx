@@ -14,7 +14,7 @@ import { Actor, ActorTag } from "./actor";
 type Phase = 0 | 1 | 2;
 export const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
 
-const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
+export const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
   { label: "02 Build", title: "Watch it assemble", actor: "ai", who: "AI" },
   { label: "03 Review", title: "Review the live draft", actor: "human", who: "Your team" },
@@ -477,15 +477,12 @@ function BuildLiteral() {
             <MonoT x={22} y={y + 10} size={5.5} color={picked ? MID : "#555"}>{n}</MonoT>
             {picked ? (
               <>
-                <G t={{ opacity: ab(1, 0, s, s + 0.1, d) }}>
+                {/* picked: the chip simply lights up — dashed outlines are kept for what appears on the page */}
+                <G t={{ opacity: ab(1, 0, s, s + 0.2, d) }}>
                   <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#3a3a3a" />
                 </G>
-                <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.45, 1], [s + 0.55, 0], [d, 0]] }}>
-                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#cfcfcf" strokeDasharray="4 3" />
-                  {corners4(13, y, 68, 16).map(([a, b], k) => <Node key={k} x={a} y={b} />)}
-                </G>
-                <G t={{ opacity: ab(0, 1, s + 0.45, s + 0.55, d) }}>
-                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="#2a2a2a" stroke="#3a3a3a" />
+                <G t={{ opacity: ab(0, 1, s, s + 0.2, d) }}>
+                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="#2a2a2a" stroke="#8a8a8a" />
                   <MonoT x={22} y={y + 10} size={5.5} color={HI}>{n}</MonoT>
                 </G>
               </>

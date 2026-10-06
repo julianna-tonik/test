@@ -277,11 +277,11 @@ function Library({ x, y, w, h }: { x: number; y: number; w: number; h: number })
           const p = picks.find((q) => q.r === r && q.c === c);
           return (
             <g key={name}>
-              <Block x={chipX(c)} y={chipY(r)} w={cw} h={18} ai={p ? aiWork(p.s, p.s + 0.8) : undefined}>
+              <Block x={chipX(c)} y={chipY(r)} w={cw} h={18}>
                 <Mono x={chipX(c) + 9} y={chipY(r) + 11} size={6}>{name}</Mono>
                 {p && (
-                  <G t={{ opacity: appear(p.s + 0.2) }}>
-                    <rect x={chipX(c) + 1} y={chipY(r) + 1} width={cw - 1} height="17" fill="#2a2a2a" />
+                  <G t={{ opacity: appear(p.s) }}>
+                    <rect x={chipX(c) + 0.5} y={chipY(r) + 0.5} width={cw} height="18" fill="#2a2a2a" stroke="#8a8a8a" />
                     <Mono x={chipX(c) + 9} y={chipY(r) + 11} size={6} color={SEL}>{name}</Mono>
                   </G>
                 )}
@@ -521,66 +521,47 @@ function SceneHomepage({ narrow }: SceneProps) {
   );
 }
 
-/* ───────────────────────── 04 · Event conversion — a 50/50 PostHog test ───────────────────────── */
+/* ───────────────────────── 04 · Event conversion — a 50/50 test: A and B side by side ───────────────────────── */
 
-function Variant({ x, y, w, b }: { x: number; y: number; w: number; b?: boolean }) {
+const VARIANTS = {
+  a: { head: "Join us in New York", cta: "Register", cw: 43, counts: ["0", "7", "15", "22", "31", "38"], rate: "2.9%" },
+  b: { head: "Save your seat in NYC", cta: "Reserve my spot", cw: 66, counts: ["0", "9", "21", "34", "46", "57"], rate: "4.4%" },
+};
+
+function Variant({ x, y, w, b, at }: { x: number; y: number; w: number; b?: boolean; at: number }) {
+  const v = b ? VARIANTS.b : VARIANTS.a;
   const px = x + IN, py = y + 45, pw = w - 26;
   return (
-    <>
+    <G t={{ opacity: show(at, 0.4), y: ev(8, 0, at, at + 0.5) }}>
       <Block x={x} y={y} w={w} h={148}>
         <Mono x={x + IN} y={y + 19} size={7} color={b ? SEL : MUTED}>{b ? "B" : "A"}</Mono>
         <Mono x={x + w - IN} y={y + 19} size={6.5} anchor="end">50%</Mono>
         <line x1={x} y1={y + 32.5} x2={x + w} y2={y + 32.5} stroke="#333" />
       </Block>
-      {/* headline + CTA */}
-      <Block x={px} y={py} w={pw} h={55} ai={b ? aiWork(1.0, 2.0) : undefined}>
-        {b ? (
-          <>
-            <G t={{ opacity: ev(1, 0, 1.2, 1.4) }}>
-              <Sans x={px + 13} y={py + 20} size={11}>Join us in New York</Sans>
-            </G>
-            <Typed id="ab-h" x={px + 13} y={py + 20} w={150} t0={1.4} t1={1.9} size={11}>Save your seat in NYC</Typed>
-            <R t={{ width: ev(43, 66, 2.1, 2.6) }} x={px + 13} y={py + 28} height="14" fill={BTN} />
-            <G t={{ opacity: ev(1, 0, 2.1, 2.3) }}>
-              <Mono x={px + 21} y={py + 37} size={5.5} color={HI2}>Register</Mono>
-            </G>
-            <G t={{ opacity: ev(0, 1, 2.4, 2.6) }}>
-              <Mono x={px + 21} y={py + 37} size={5.5} color={HI2}>Reserve my spot</Mono>
-            </G>
-          </>
-        ) : (
-          <>
-            <Sans x={px + 13} y={py + 20} size={11}>Join us in New York</Sans>
-            <rect x={px + 13} y={py + 28} width="43" height="14" fill={BTN} />
-            <Mono x={px + 21} y={py + 37} size={5.5} color={HI2}>Register</Mono>
-          </>
-        )}
+      <Block x={px} y={py} w={pw} h={55}>
+        <Sans x={px + 13} y={py + 20} size={11}>{v.head}</Sans>
+        <rect x={px + 13} y={py + 28} width={v.cw} height="14" fill={BTN} />
+        <Mono x={px + 21} y={py + 37} size={5.5} color={HI2}>{v.cta}</Mono>
       </Block>
-      {/* result */}
       <Mono x={px} y={y + 116} size={6}>Registrations</Mono>
-      <Count x={px} y={y + 135} t0={3.0} t1={5.4} values={b ? ["0", "9", "21", "34", "46", "57"] : ["0", "7", "15", "22", "31", "38"]} size={15} color={b ? SEL : INK} />
-      <G t={{ opacity: appear(5.5) }}>
-        <Mono x={x + w - IN} y={y + 135} size={7} anchor="end" color={b ? SEL : MUTED}>{b ? "4.4%" : "2.9%"}</Mono>
+      <Count x={px} y={y + 135} t0={2.2} t1={5.0} values={v.counts} size={15} color={b ? SEL : INK} />
+      <G t={{ opacity: appear(5.1) }}>
+        <Mono x={x + w - IN} y={y + 135} size={7} anchor="end" color={b ? SEL : MUTED}>{v.rate}</Mono>
       </G>
-    </>
+    </G>
   );
 }
 
-const AB: Record<"wide" | "narrow", Layout> = { wide: { vb: [461, 223] }, narrow: { vb: [237, 383] } };
+const AB: Record<"wide" | "narrow", Layout> = { wide: { vb: [435, 170] }, narrow: { vb: [281, 330] } };
 function SceneAB({ narrow }: SceneProps) {
-  const w = narrow ? 236 : 460, h = narrow ? 382 : 222;
-  const vw = narrow ? 210 : 211;
-  const foot = h - 13;
+  const w = narrow ? 280 : 211;
+  const foot = narrow ? 326 : 166;
   return (
     <G t={{ opacity: FADE }}>
-      <Win x={0} y={0} w={w} h={h} title="PostHog experiment" right={<Mono x={w - IN} y={19} anchor="end">Goal · registrations</Mono>} />
-      <Variant x={IN} y={45} w={vw} />
-      <Variant x={narrow ? IN : IN + vw + 12} y={narrow ? 205 : 45} w={vw} b />
-      <G t={{ opacity: ev(1, 0, 5.4, 5.6) }}>
-        <Mono x={IN} y={foot} size={6}>Collecting registrations…</Mono>
-      </G>
-      <G t={{ opacity: appear(5.6) }}>
-        <Mono x={IN} y={foot} size={6} color={SEL}>B leading · +52%</Mono>
+      <Variant x={0} y={0} w={w} at={0.3} />
+      <Variant x={narrow ? 0 : w + 12} y={narrow ? 160 : 0} w={w} b at={0.8} />
+      <G t={{ opacity: appear(5.3) }}>
+        <Mono x={0} y={foot} size={6} color={SEL}>B leading · +52%</Mono>
       </G>
     </G>
   );
@@ -646,6 +627,24 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
 
 
 
+/** One content edit on the live site: the cell fills, a copy drops into the Sanity lane, the Sanity cell fills too. */
+function Edit({ col, t }: { col: number; t: number }) {
+  const x = col * M + 5;
+  return (
+    <>
+      <G t={{ opacity: [[0, 0], [t, 0], [t + 0.25, 1], [t + 1.1, 1], [t + 1.5, 0.35], [6.6, 0.35], [6.62, 0], [D, 0]] }}>
+        <rect x={x} y={27} width={M - 9} height={M - 9} fill={SEL} />
+      </G>
+      <G t={{ y: ev(0, 90, t + 0.45, t + 1.05), opacity: [[0, 0], [t + 0.4, 0], [t + 0.5, 1], [t + 1.0, 1], [t + 1.1, 0], [D, 0]] }}>
+        <rect x={x} y={27} width={M - 9} height={M - 9} fill={SEL} />
+      </G>
+      <G t={{ opacity: [[0, 0], [t + 1.0, 0], [t + 1.1, 1], [t + 1.6, 1], [t + 2.0, 0.35], [6.6, 0.35], [6.62, 0], [D, 0]] }}>
+        <rect x={x} y={117} width={M - 9} height={M - 9} fill={SEL} />
+      </G>
+    </>
+  );
+}
+
 export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { margin: "-20% 0px" });
@@ -653,10 +652,12 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
   const on = inView && !reduce;
   const narrow = useNarrow();
   // narrow screens: half the columns, so the labels stay readable
-  const N = narrow ? 15 : 30, E = narrow ? 2 : 4;
+  const N = narrow ? 15 : 30;
   const imports = narrow ? [[0, 5, 0.4], [5, 4, 1.5], [9, 6, 4.0]] : [[0, 10, 0.4], [10, 8, 1.5], [18, 12, 4.0]];
   const labels = ["IMPORT 01 · 640 PAGES", "IMPORT 02 · 410 PAGES", "IMPORT 03 · 950 PAGES"];
   const at = [1.6, 2.7, 5.2];
+  // edits on the live site, each in a range that is already imported
+  const edits = narrow ? [[2, 2.0], [6, 3.3], [3, 4.7]] : [[4, 2.0], [13, 3.3], [7, 4.7]];
   return (
     <Ctx.Provider value={{ on, reduce }}>
       <svg aria-hidden ref={ref} viewBox={narrow ? "0 0 301 206" : "0 0 620 196"} fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
@@ -690,35 +691,8 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
             </G>
           ))}
 
-          {/* content changes on the live site (a person edits) → re-imported, no freeze */}
-          {/* a person edits one piece of content on the live site (cursor = a person, as in the hero) */}
-          <G t={{ opacity: [[0, 0], [2.65, 0], [2.7, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
-            <rect x={E * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill={BG} />
-            <rect x={E * M + 6} y={28} width="9" height="2" fill={SEL} />
-            <rect x={E * M + 6} y={33} width="6" height="2" fill={SEL} />
-          </G>
-          <G
-            t={{
-              x: [[0, E * M + 110], [1.9, E * M + 110], [2.55, E * M + 14], [3.1, E * M + 14], [3.5, E * M + 50], [D, E * M + 50]],
-              y: [[0, 70], [1.9, 70], [2.55, 34], [3.1, 34], [3.5, 60], [D, 60]],
-              opacity: [[0, 0], [1.9, 0], [2.05, 1], [3.2, 1], [3.5, 0], [D, 0]],
-              scale: [[0, 1], [2.55, 1], [2.62, 0.82], [2.72, 1], [D, 1]],
-            }}
-          >
-            <path d="M0 0L13 7.8L7 9L4.2 14.8Z" fill={SEL} stroke={BG} strokeWidth="1" strokeLinejoin="round" />
-          </G>
-          <G t={{ opacity: pulse(3.3, 4.2) }}>
-            <line x1={(E + 0.5) * M + 0.5} y1="64" x2={(E + 0.5) * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
-          </G>
-          <G t={{ y: ev(0, 90, 3.4, 4.0), opacity: [[0, 0], [3.3, 0], [3.4, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
-            <rect x={E * M + 0.5} y={22.5} width={M} height={M} fill={BG} stroke={SEL} strokeDasharray="3 2" />
-          </G>
-          <G t={{ opacity: show(4.0) }}>
-            <rect x={E * M + 0.5} y={112.5} width={M} height={M} stroke={SEL} fill="none" />
-          </G>
-          <G t={{ opacity: pulse(3.4, 5.2) }}>
-            <text x={E * M + 26} y="86" fill={SEL} fontSize="10">RE-IMPORT · 1 PAGE</text>
-          </G>
+          {/* no content freeze: the team keeps editing the live Webflow site; each edit lands in Sanity too */}
+          {edits.map(([col, t]) => <Edit key={col} col={col} t={t} />)}
         </G>
       </svg>
     </Ctx.Provider>
