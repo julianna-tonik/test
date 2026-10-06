@@ -14,7 +14,7 @@ import { Actor, ActorTag } from "./actor";
 type Phase = 0 | 1 | 2;
 export const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 7.4 };
 
-const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
+export const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
   { label: "02 Build", title: "Watch it assemble", actor: "ai", who: "AI" },
   { label: "03 Review", title: "Review the live draft", actor: "human", who: "Your team" },

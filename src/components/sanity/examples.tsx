@@ -82,14 +82,14 @@ export function SanityExamples() {
             <div
               key={e.label}
               ref={(el) => { sectionRefs.current[i] = el; }}
-              className={cn("flex flex-col gap-10 transition-opacity duration-700 md:gap-20", active === i || active === -1 && i === 0 ? "opacity-100" : "opacity-40")}
+              className={cn("flex flex-col gap-10 transition-opacity duration-700 md:gap-20", active === i || active === -1 && i === 0 ? "opacity-100" : "opacity-100 md:opacity-40")}
             >
               {/* Vibe Fixer "What you get" anatomy: illustration full width, text centred below */}
               <div className="flex w-full items-center">
                 <RequestScene index={i} active={active === i} />
               </div>
               <div className="flex justify-center">
-                <div className="flex max-w-lg flex-col gap-6">
+                <div className="flex max-w-lg flex-col gap-10">
                   <p className="text-2xl text-off-white md:text-3xl">{e.label}</p>
                   <p className="text-base leading-6 text-off-white-light">{e.request}</p>
                 </div>

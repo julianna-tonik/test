@@ -463,6 +463,24 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
 
 
 
+/** One content edit on the live site: the cell fills, a copy drops into the Sanity lane, the Sanity cell fills too. */
+function Edit({ col, t }: { col: number; t: number }) {
+  const x = col * M + 5;
+  return (
+    <>
+      <G t={{ opacity: [[0, 0], [t, 0], [t + 0.25, 1], [t + 1.1, 1], [t + 1.5, 0.35], [6.6, 0.35], [6.62, 0], [D, 0]] }}>
+        <rect x={x} y={27} width={M - 9} height={M - 9} fill={SEL} />
+      </G>
+      <G t={{ y: ev(0, 90, t + 0.45, t + 1.05), opacity: [[0, 0], [t + 0.4, 0], [t + 0.5, 1], [t + 1.0, 1], [t + 1.1, 0], [D, 0]] }}>
+        <rect x={x} y={27} width={M - 9} height={M - 9} fill={SEL} />
+      </G>
+      <G t={{ opacity: [[0, 0], [t + 1.0, 0], [t + 1.1, 1], [t + 1.6, 1], [t + 2.0, 0.35], [6.6, 0.35], [6.62, 0], [D, 0]] }}>
+        <rect x={x} y={117} width={M - 9} height={M - 9} fill={SEL} />
+      </G>
+    </>
+  );
+}
+
 /** True below the `sm` breakpoint (after mount; SSR renders the desktop layout). */
 function useNarrow() {
   const [narrow, setNarrow] = useState(false);
@@ -483,10 +501,12 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
   const on = inView && !reduce;
   const narrow = useNarrow();
   // narrow screens: half the columns, so the labels stay readable
-  const N = narrow ? 15 : 30, E = narrow ? 2 : 4;
+  const N = narrow ? 15 : 30;
   const imports = narrow ? [[0, 5, 0.4], [5, 4, 1.5], [9, 6, 4.0]] : [[0, 10, 0.4], [10, 8, 1.5], [18, 12, 4.0]];
   const labels = ["IMPORT 01", "IMPORT 02", "IMPORT 03"];
   const at = [1.6, 2.7, 5.2];
+  // edits on the live site, each in a range that is already imported
+  const edits = narrow ? [[2, 2.0], [6, 3.3], [3, 4.7]] : [[4, 2.0], [13, 3.3], [7, 4.7]];
   return (
     <Ctx.Provider value={{ on, reduce }}>
       <svg aria-hidden ref={ref} viewBox={narrow ? "0 0 301 196" : "0 0 620 196"} fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
@@ -520,35 +540,8 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
             </G>
           ))}
 
-          {/* content changes on the live site (a person edits) → re-imported, no freeze */}
-          {/* a person edits one piece of content on the live site (cursor = a person, as in the hero) */}
-          <G t={{ opacity: [[0, 0], [2.65, 0], [2.7, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
-            <rect x={E * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill={BG} />
-            <rect x={E * M + 6} y={28} width="9" height="2" fill={SEL} />
-            <rect x={E * M + 6} y={33} width="6" height="2" fill={SEL} />
-          </G>
-          <G
-            t={{
-              x: [[0, E * M + 110], [1.9, E * M + 110], [2.55, E * M + 14], [3.1, E * M + 14], [3.5, E * M + 50], [D, E * M + 50]],
-              y: [[0, 70], [1.9, 70], [2.55, 34], [3.1, 34], [3.5, 60], [D, 60]],
-              opacity: [[0, 0], [1.9, 0], [2.05, 1], [3.2, 1], [3.5, 0], [D, 0]],
-              scale: [[0, 1], [2.55, 1], [2.62, 0.82], [2.72, 1], [D, 1]],
-            }}
-          >
-            <path d="M0 0L13 7.8L7 9L4.2 14.8Z" fill={SEL} stroke={BG} strokeWidth="1" strokeLinejoin="round" />
-          </G>
-          <G t={{ opacity: pulse(3.3, 4.2) }}>
-            <line x1={(E + 0.5) * M + 0.5} y1="64" x2={(E + 0.5) * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
-          </G>
-          <G t={{ y: ev(0, 90, 3.4, 4.0), opacity: [[0, 0], [3.3, 0], [3.4, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
-            <rect x={E * M + 0.5} y={22.5} width={M} height={M} fill={BG} stroke={SEL} strokeDasharray="3 2" />
-          </G>
-          <G t={{ opacity: show(4.0) }}>
-            <rect x={E * M + 0.5} y={112.5} width={M} height={M} stroke={SEL} fill="none" />
-          </G>
-          <G t={{ opacity: pulse(3.4, 5.2) }}>
-            <text x={E * M + 26} y="86" fill={SEL} fontSize="10">RE-IMPORT</text>
-          </G>
+          {/* no content freeze: the team keeps editing the live Webflow site; each edit lands in Sanity too */}
+          {edits.map(([col, t]) => <Edit key={col} col={col} t={t} />)}
         </G>
       </svg>
     </Ctx.Provider>
