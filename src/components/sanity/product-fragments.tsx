@@ -359,42 +359,55 @@ function TypedT({ id, x, y, w, t0, t1, children, size = 9, color }: { id: string
 }
 
 const REQUEST_LINES = ["Create an NYC version of our event page for", "enterprise security teams. Reuse the existing", "template and customer stories."];
+const PHOTO = "#666";
+const BTN = "#424242";
+
+/** A person: filled photo + two caption bars (Figma "Person"). */
+function PersonRow({ x, y, d = 12 }: { x: number; y: number; d?: number }) {
+  return (
+    <>
+      <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} fill={PHOTO} />
+      <rect x={x + d + 5.5} y={y + d / 2 - 3.75} width="18" height="2.5" fill={PBAR} />
+      <rect x={x + d + 5.5} y={y + d / 2 + 1.75} width="15.5" height="2.5" fill={PBAR} />
+    </>
+  );
+}
 
 function AskLiteral() {
   const d = useDur();
   return (
     <>
       <Header>
-        <path d="M10.5 10.5h14v10h-8l-3 3v-3h-3z" stroke={MID} strokeWidth="0.75" fill="none" />
-        <MonoT x={32} y={19.5}>New request</MonoT>
-        <MonoT x={310} y={19.5} anchor="end" color="#666">Talk to your LLM</MonoT>
+        <path d="M13.5 10.5h13v9.5h-7.5l-3 3v-3h-2.5z" stroke={MID} strokeWidth="0.75" fill="none" />
+        <MonoT x={35} y={19}>New request</MonoT>
+        <MonoT x={307} y={19} anchor="end" color="#666">Talk to your LLM</MonoT>
       </Header>
 
       {/* composer: the request is typed */}
-      <rect x="10.5" y="166.5" width="299" height="60" stroke={LINE} fill="none" />
+      <rect x="13.5" y="167.5" width="293" height="59" stroke={LINE} fill="none" />
       <G t={{ opacity: ab(1, 0, 2.5, 2.7, d) }}>
         {REQUEST_LINES.map((l, i) => (
-          <TypedT key={i} id={`ask${i}`} x={20} y={182 + i * 12} w={[205, 210, 140][i]} t0={0.3 + i * 0.65} t1={0.9 + i * 0.65} size={8.5}>{l}</TypedT>
+          <TypedT key={i} id={`ask${i}`} x={25} y={185 + i * 12} w={[205, 210, 140][i]} t0={0.3 + i * 0.65} t1={0.9 + i * 0.65} size={8.5}>{l}</TypedT>
         ))}
       </G>
       <G t={{ opacity: [[0, 0.45], [2.2, 0.45], [2.35, 1], [2.9, 1], [3.2, 0.45], [d, 0.45]] }}>
-        <rect x="281.5" y="198.5" width="20" height="20" stroke={HI} fill="none" />
-        <path d="M286.5 208.5h10M292.5 204.5l4 4-4 4" stroke={HI} strokeWidth="1" fill="none" />
+        <rect x="278.5" y="198.5" width="19" height="19" stroke={HI} fill="none" />
+        <path d="M283 208h10M289 204l4 4-4 4" stroke={HI} strokeWidth="1" fill="none" />
       </G>
 
-      {/* sent — a person (solid avatar) */}
+      {/* sent — a person (filled photo, bottom-aligned to the bubble) */}
       <G t={{ opacity: ab(0, 1, 2.5, 2.9, d), y: ab(14, 0, 2.5, 3.0, d) }}>
-        <rect x="52.5" y="44.5" width="236" height="52" stroke={SOFT} fill="#222" />
-        {REQUEST_LINES.map((l, i) => <SansT key={i} x={62} y={60 + i * 12} size={8.5}>{l}</SansT>)}
-        <circle cx="302" cy="90.5" r="6" fill={HI} />
+        <rect x="80.5" y="45.5" width="206" height="51" stroke={SOFT} fill="#222" />
+        {REQUEST_LINES.map((l, i) => <SansT key={i} x={93} y={62 + i * 12} size={8.5}>{l}</SansT>)}
+        <circle cx="301" cy="91" r="6" fill={PHOTO} />
       </G>
 
       {/* AI picks it up */}
       <G t={{ opacity: ab(0, 1, 3.0, 3.3, d) }}>
-        <circle cx="16.5" cy="120.5" r="6" stroke={MID} strokeDasharray="1.8 1.8" fill="none" />
-        <MonoT x={30} y={123}>Building a draft in Sanity</MonoT>
+        <circle cx="19" cy="115" r="5.5" stroke={MID} strokeDasharray="1.8 1.8" fill="none" />
+        <MonoT x={33} y={117.5}>Building a draft in Sanity</MonoT>
         {[0, 1, 2].map((i) => (
-          <R key={i} t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }} x={140 + i * 6} y={119} width="3" height="3" fill={MID} />
+          <R key={i} t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }} x={142.5 + i * 7} y={113} width="4" height="4" fill={MID} />
         ))}
       </G>
     </>
@@ -404,11 +417,11 @@ function AskLiteral() {
 const LIB = ["Hero", "Logos", "Speakers", "Stories", "Form"];
 const LIB_REST = ["Stats", "Schedule"];
 const SLOTS: { name: string; y: number; h: number }[] = [
-  { name: "Hero", y: 42, h: 40 },
-  { name: "Logos", y: 90, h: 16 },
-  { name: "Speakers", y: 114, h: 40 },
-  { name: "Stories", y: 162, h: 26 },
-  { name: "Form", y: 196, h: 22 },
+  { name: "Hero", y: 45, h: 29 },
+  { name: "Logos", y: 82, h: 21 },
+  { name: "Speakers", y: 111, h: 38 },
+  { name: "Stories", y: 157, h: 30 },
+  { name: "Form", y: 195, h: 32 },
 ];
 const PBAR = "#4f4f4f";
 const corners4 = (x: number, y: number, w: number, h: number) => [[x + 0.5, y + 0.5], [x + w + 0.5, y + 0.5], [x + 0.5, y + h + 0.5], [x + w + 0.5, y + h + 0.5]] as const;
@@ -439,45 +452,45 @@ function Slot({ x, y, w, h, s, children }: { x: number; y: number; w: number; h:
 
 function BuildLiteral() {
   const d = useDur();
-  const PX = 90, PW = 218;
+  const PX = 93, PW = 214;
   return (
     <>
       <Header>
-        <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
-        <MonoT x={32} y={19.5}>Sanity Studio</MonoT>
+        <path d="M13.5 11h5v5h-5zM20.5 11h5v5h-5zM13.5 18h5v5h-5zM20.5 18h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
+        <MonoT x={33} y={19}>Sanity Studio</MonoT>
         <G t={{ opacity: ab(1, 0, 3.15, 3.3, d) }}>
-          <MonoT x={310} y={19.5} anchor="end" color="#666">Building…</MonoT>
+          <MonoT x={307} y={19} anchor="end" color="#666">Building…</MonoT>
         </G>
         <G t={{ opacity: ab(0, 1, 3.25, 3.45, d) }}>
-          <MonoT x={310} y={19.5} anchor="end" color={HI}>Draft ready</MonoT>
+          <MonoT x={307} y={19} anchor="end" color={HI}>Draft ready</MonoT>
         </G>
       </Header>
 
-      {/* approved section library — a picked chip's outline goes dashed, then lights up */}
+      {/* approved section library — a picked chip's outline goes dashed, then fills */}
       {[...LIB, ...LIB_REST].map((n, i) => {
         const s = 0.2 + i * 0.6;
         const picked = i < LIB.length;
-        const y = 42 + i * 22;
+        const y = 45 + i * 22;
         return (
           <g key={n}>
-            <rect x="10.5" y={y + 0.5} width="68" height="16" fill="#202020" />
-            <MonoT x={18} y={y + 11} size={5.5} color={picked ? MID : "#555"}>{n}</MonoT>
+            <rect x="13.5" y={y + 0.5} width="68" height="16" fill="#202020" />
+            <MonoT x={22} y={y + 10} size={5.5} color={picked ? MID : "#555"}>{n}</MonoT>
             {picked ? (
               <>
                 <G t={{ opacity: ab(1, 0, s, s + 0.1, d) }}>
-                  <rect x="10.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#383838" />
+                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#3a3a3a" />
                 </G>
                 <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.45, 1], [s + 0.55, 0], [d, 0]] }}>
-                  <rect x="10.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#cfcfcf" strokeDasharray="4 3" />
-                  {corners4(10, y, 68, 16).map(([a, b], k) => <Node key={k} x={a} y={b} />)}
+                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#cfcfcf" strokeDasharray="4 3" />
+                  {corners4(13, y, 68, 16).map(([a, b], k) => <Node key={k} x={a} y={b} />)}
                 </G>
                 <G t={{ opacity: ab(0, 1, s + 0.45, s + 0.55, d) }}>
-                  <rect x="10.5" y={y + 0.5} width="68" height="16" fill="#2a2a2a" stroke="#8a8a8a" />
-                  <MonoT x={18} y={y + 11} size={5.5} color={HI}>{n}</MonoT>
+                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="#2a2a2a" stroke="#3a3a3a" />
+                  <MonoT x={22} y={y + 10} size={5.5} color={HI}>{n}</MonoT>
                 </G>
               </>
             ) : (
-              <rect x="10.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#333" />
+              <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#333" />
             )}
           </g>
         );
@@ -488,30 +501,21 @@ function BuildLiteral() {
         const s = 0.35 + i * 0.6;
         return (
           <Slot key={b.name} x={PX} y={b.y} w={PW} h={b.h} s={s}>
-            {b.name === "Hero" && (
-              <>
-                <SansT x={PX + 12} y={b.y + 22} size={11}>NYC Security Summit</SansT>
-                <rect x={PX + 12} y={b.y + 29} width="60" height="2.5" fill={PBAR} />
-              </>
-            )}
-            {b.name === "Logos" && [0, 1, 2, 3, 4].map((k) => <rect key={k} x={PX + 16 + k * 40} y={b.y + 6.5} width="22" height="3" fill="#666" />)}
-            {b.name === "Speakers" && [0, 1, 2, 3].map((k) => (
-              <g key={k}>
-                <circle cx={PX + 30 + k * 52} cy={b.y + 16} r="7" stroke="#666" fill="none" />
-                <rect x={PX + 21 + k * 52} y={b.y + 28} width="18" height="2.5" fill={PBAR} />
-              </g>
-            ))}
+            {b.name === "Hero" && <SansT x={PX + 12} y={b.y + 18.5} size={11}>NYC Security Summit</SansT>}
+            {b.name === "Logos" && [0, 1, 2, 3, 4].map((k) => <rect key={k} x={PX + 13 + k * 41.5} y={b.y + 9} width="22" height="3" fill="#666" />)}
+            {b.name === "Speakers" && [106, 156, 206.5, 256.5].map((px) => <PersonRow key={px} x={px} y={b.y + 13} />)}
             {b.name === "Stories" && (
               <>
-                <circle cx={PX + 18} cy={b.y + 13} r="6" stroke="#666" fill="none" />
-                <rect x={PX + 32} y={b.y + 8} width="150" height="2.5" fill={PBAR} />
-                <rect x={PX + 32} y={b.y + 15} width="100" height="2.5" fill={PBAR} />
+                <circle cx={PX + 19} cy={b.y + 15} r="6" fill={PHOTO} />
+                <rect x={PX + 33} y={b.y + 10.5} width="150" height="2.5" fill={PBAR} />
+                <rect x={PX + 33} y={b.y + 17.5} width="100" height="2.5" fill={PBAR} />
               </>
             )}
             {b.name === "Form" && (
               <>
-                <rect x={PX + 10.5} y={b.y + 5.5} width="128" height="11" stroke="#555" fill="none" />
-                <rect x={PX + 146.5} y={b.y + 5.5} width="60" height="11" stroke="#8a8a8a" fill="none" />
+                <rect x={PX + 13.5} y={b.y + 9.5} width="123" height="13" stroke="#555" fill="none" />
+                <rect x={PX + 145} y={b.y + 9} width="56" height="14" fill={BTN} />
+                <MonoT x={PX + 173} y={b.y + 18} size={5.5} anchor="middle" color={HI}>Register</MonoT>
               </>
             )}
           </Slot>
@@ -540,74 +544,68 @@ function RBlock({ x, y, w, h, sel, children }: { x: number; y: number; w: number
 
 function ReviewLiteral() {
   const d = useDur();
-  const X = 24, W = 272;
+  const X = 20, W = 280;
   const sel = (a: number, b: number): Track => [[0, 0], [a, 0], [a + 0.1, 1], [b, 1], [b + 0.2, 0], [d, 0]];
-  const boxes: [number, number, number, number][] = [[X, 40, W, 12], [X, 60, W, 60], [X, 128, W, 34], [X, 170, W, 34], [X, 212, W, 10]];
+  const boxes: [number, number, number, number][] = [[X, 52, W, 22.5], [X, 80.5, W, 47.5], [X, 134, W, 32], [X, 172, W, 32], [X, 210, W, 10]];
   return (
     <>
       <Header>
-        <MonoT x={10} y={19.5} color="#666">acme.com/nyc-summit</MonoT>
+        <MonoT x={13} y={19} color="#666">acme.com/nyc-summit</MonoT>
         <G t={{ opacity: ab(1, 0, 4.85, 5.05, d) }}>
-          <MonoT x={271} y={19.5} anchor="end">Draft</MonoT>
+          <MonoT x={271} y={19} anchor="end">Draft</MonoT>
         </G>
         <G t={{ opacity: ab(0, 1, 4.95, 5.25, d) }}>
-          <MonoT x={271} y={19.5} anchor="end" color={HI}>Live</MonoT>
+          <MonoT x={271} y={19} anchor="end" color={HI}>Live</MonoT>
         </G>
-        <rect x="278.5" y="10.5" width="31" height="12" rx="6" stroke={SOFT} fill="none" />
-        <R t={{ opacity: ab(0, 1, 4.8, 5.2, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
-        <G t={{ x: ab(0, 18, 4.8, 5.2, d) }}>
-          <circle cx="285" cy="16.5" r="4" fill={MID} />
+        <rect x="277.5" y="10.5" width="29" height="12" rx="6" stroke={SOFT} fill="none" />
+        <R t={{ opacity: ab(0, 1, 4.8, 5.2, d) }} x={278} y={11} width={28} height={11} rx={5.5} fill="#3a3a3a" />
+        <G t={{ x: ab(0, 16, 4.8, 5.2, d) }}>
+          <circle cx="284" cy="16.5" r="4" fill={MID} />
         </G>
-        <G t={{ x: ab(0, 18, 4.8, 5.2, d), opacity: ab(0, 1, 4.95, 5.2, d) }}>
-          <circle cx="285" cy="16.5" r="4" fill={HI} />
+        <G t={{ x: ab(0, 16, 4.8, 5.2, d), opacity: ab(0, 1, 4.95, 5.2, d) }}>
+          <circle cx="284" cy="16.5" r="4" fill={HI} />
         </G>
       </Header>
 
       {/* nav */}
-      <RBlock x={X} y={40} w={W} h={12}>
-        <rect x={X + 10} y={44.5} width="34" height="3" fill={PBAR} />
-        {[0, 1, 2].map((k) => <rect key={k} x={X + W - 80 + k * 24} y={44.5} width="16" height="3" fill={PBAR} />)}
+      <RBlock x={X} y={52} w={W} h={22.5}>
+        <rect x={X + 13} y={61} width="34" height="4.5" fill={PBAR} />
+        {[0, 1, 2].map((k) => <rect key={k} x={X + 203 + k * 24} y={62} width="16" height="3" fill={PBAR} />)}
       </RBlock>
 
       {/* hero — the person rewrites the headline */}
-      <RBlock x={X} y={60} w={W} h={60} sel={sel(1.15, 2.4)}>
+      <RBlock x={X} y={80.5} w={W} h={47.5} sel={sel(1.15, 2.4)}>
         <G t={{ opacity: ab(1, 0, 1.35, 1.55, d) }}>
-          <SansT x={X + 14} y={84} size={12.5}>Build trust into</SansT>
-          <SansT x={X + 14} y={99} size={12.5}>every layer.</SansT>
+          <SansT x={X + 13} y={102.5} size={12.5}>Build trust into</SansT>
+          <SansT x={X + 13} y={115.5} size={12.5}>every layer.</SansT>
         </G>
-        <TypedT id="rv1" x={X + 14} y={84} w={130} t0={1.6} t1={2.0} size={12.5}>Security leaders,</TypedT>
-        <TypedT id="rv2" x={X + 14} y={99} w={130} t0={2.0} t1={2.35} size={12.5}>meet in New York.</TypedT>
-        <rect x={X + 14.5} y={106.5} width="56" height="8" stroke="#666" fill="none" />
+        <TypedT id="rv1" x={X + 13} y={102.5} w={130} t0={1.6} t1={2.0} size={12.5}>Security leaders,</TypedT>
+        <TypedT id="rv2" x={X + 13} y={115.5} w={130} t0={2.0} t1={2.35} size={12.5}>meet in New York.</TypedT>
       </RBlock>
 
       {/* speakers ↓ / stories ↑ — the person drags customer stories above speakers */}
-      <G t={{ y: ab(0, 42, 3.0, 3.8, d) }}>
-        <RBlock x={X} y={128} w={W} h={34}>
-          {[0, 1, 2, 3].map((k) => (
-            <g key={k}>
-              <circle cx={X + 30 + k * 66} cy={142} r="7" stroke="#666" fill="none" />
-              <rect x={X + 21 + k * 66} y={153} width="18" height="2.5" fill={PBAR} />
-            </g>
-          ))}
+      <G t={{ y: ab(0, 38, 3.0, 3.8, d) }}>
+        <RBlock x={X} y={134} w={W} h={32}>
+          {[33, 105, 177.5, 249.5].map((px) => <PersonRow key={px} x={px} y={143} d={14} />)}
         </RBlock>
       </G>
-      <G t={{ y: ab(0, -42, 3.0, 3.8, d) }}>
-        <RBlock x={X} y={170} w={W} h={34} sel={sel(2.85, 3.9)}>
-          <circle cx={X + 22} cy={187} r="7" stroke="#666" fill="none" />
-          <rect x={X + 38} y={181} width="170" height="2.5" fill={PBAR} />
-          <rect x={X + 38} y={188} width="120" height="2.5" fill={PBAR} />
+      <G t={{ y: ab(0, -38, 3.0, 3.8, d) }}>
+        <RBlock x={X} y={172} w={W} h={32} sel={sel(2.85, 3.9)}>
+          <circle cx={X + 20} cy={188} r="7" fill={PHOTO} />
+          <rect x={X + 35} y={183.5} width="170" height="2.5" fill={PBAR} />
+          <rect x={X + 35} y={190.5} width="120" height="2.5" fill={PBAR} />
         </RBlock>
       </G>
 
       {/* footer */}
-      <RBlock x={X} y={212} w={W} h={10} />
+      <RBlock x={X} y={210} w={W} h={10} />
 
-      <GoLive id="lit" t={5.2} boxes={boxes} frame={[X - 6, 34, W + 12, 194]} />
+      <GoLive id="lit" t={5.2} boxes={boxes} frame={[13, 45, 294, 182]} />
 
       <Person
         t={{
           x: [[0, 300], [0.4, 300], [1.1, 110], [2.4, 110], [2.85, 210], [3.8, 210], [4.7, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.1, 92], [2.4, 92], [2.85, 188], [3.0, 188], [3.8, 146], [4.7, 18], [d, 18]],
+          y: [[0, 236], [0.4, 236], [1.1, 100], [2.4, 100], [2.85, 188], [3.0, 188], [3.8, 150], [4.7, 18], [d, 18]],
           opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
           scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
         }}
