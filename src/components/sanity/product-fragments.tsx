@@ -12,7 +12,7 @@ import { Actor, ActorTag } from "./actor";
  */
 
 type Phase = 0 | 1 | 2;
-const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 7.4 };
+const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
 
 const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
@@ -99,56 +99,6 @@ export function Cursor() {
   return <path d="M0 0L11.6 7L6.3 8.1L3.7 13.2Z" fill={HI} stroke={BG} strokeWidth="1" strokeLinejoin="round" />;
 }
 
-/* ── 01 ASK: a person writes a request; AI picks it up ── */
-
-function AskPanel() {
-  const d = useDur();
-  return (
-    <>
-      <Header>
-        {/* chat icon — header content sits 10 in from every edge */}
-        <path d="M10.5 10.5h14v10h-8l-3 3v-3h-3z" stroke={MID} strokeWidth="0.75" fill="none" />
-      </Header>
-
-      {/* composer: the request "types" as placeholder lines filling left → right */}
-      <rect x="10.5" y="178.5" width="299" height="46" stroke={LINE} fill="none" />
-      <G t={{ opacity: ab(1, 0, 2.5, 2.7, d) }}>
-        <R t={{ scaleX: ab(0, 1, 0.3, 1.4, d) }} linear={["scaleX"]} x={22} y={192} width={190} height={5} fill="#5a5a5a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
-        <R t={{ scaleX: ab(0, 1, 1.42, 2.1, d) }} linear={["scaleX"]} x={22} y={204} width={110} height={5} fill="#5a5a5a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
-      </G>
-      {/* send (icon only, arrow points where the message goes) */}
-      <G t={{ opacity: [[0, 0.45], [2.2, 0.45], [2.35, 1], [2.9, 1], [3.2, 0.45], [d, 0.45]] }}>
-        <rect x="279.5" y="191.5" width="20" height="20" stroke={HI} fill="none" />
-        <path d="M284.5 201.5h10M290.5 197.5l4 4-4 4" stroke={HI} strokeWidth="1" fill="none" />
-      </G>
-
-      {/* the sent request, in the thread — a person (solid avatar, bottom-aligned to the bubble) */}
-      <G t={{ opacity: ab(0, 1, 2.5, 2.9, d), y: ab(14, 0, 2.5, 3.0, d) }}>
-        <rect x="88.5" y="52.5" width="200" height="42" stroke={SOFT} fill="#222" />
-        <rect x="100" y="64" width="170" height="5" fill="#777" />
-        <rect x="100" y="76" width="100" height="5" fill="#777" />
-        <circle cx="302" cy="88.5" r="6" fill={HI} />
-      </G>
-
-      {/* AI picks it up — dashed avatar + working dots */}
-      <G t={{ opacity: ab(0, 1, 3.0, 3.3, d) }}>
-        <circle cx="16.5" cy="120.5" r="6" stroke={MID} strokeDasharray="1.8 1.8" fill="none" />
-        {[0, 1, 2].map((i) => (
-          <R
-            key={i}
-            t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }}
-            x={30 + i * 8}
-            y={118.5}
-            width="4"
-            height="4"
-            fill={MID}
-          />
-        ))}
-      </G>
-    </>
-  );
-}
-
 /* ── shared page layout: the same page is built in 02 and reviewed in 03 ── */
 
 export const PAGE = { x: 40, w: 240 };
@@ -159,52 +109,8 @@ export const SLOT = {
   cta: { y: 184, h: 30 },
 };
 /** Three cards (7 cells wide) become four (5 cells wide) when AI adds one. */
-const CARDS3 = [40, 125, 210];
 export const CARDS4 = [40, 40 + 190 / 3, 40 + 380 / 3, 230];
-const CARD_W3 = 70;
 export const CARD_W4 = 50;
-
-/* ── 02 BUILD: the page exists; AI adds a fourth card and the row makes room ── */
-
-function BuildPanel() {
-  const d = useDur();
-  const { y, h } = SLOT.cards;
-  return (
-    <>
-      <Header>
-        <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
-      </Header>
-      <rect x="36.5" y="44.5" width="248" height="174" stroke="#2e2e2e" fill="none" />
-
-      {/* sections already on the page */}
-      <path d={cellsPath(PAGE.x, SLOT.hero.y, 24, 5) + cellsPath(PAGE.x, SLOT.logos.y, 24, 1) + cellsPath(PAGE.x, SLOT.cta.y, 24, 3)} stroke={GRID} fill="none" />
-
-      {/* existing cards narrow and shift — cells stay square, the card is clipped */}
-      {CARDS3.map((x3, i) => (
-        <G key={i} t={{ x: ab(x3, CARDS4[i], 0.4, 1.3, d) }}>
-          <defs>
-            <clipPath id={`bc${i}`}>
-              <R t={{ width: ab(CARD_W3 + 1, CARD_W4 + 1, 0.4, 1.3, d) }} x={0} y={y} height={h + 1} />
-            </clipPath>
-          </defs>
-          <path d={cellsPath(0, y, 7, 4)} stroke={GRID} fill="none" clipPath={`url(#bc${i})`} />
-          <R t={{ width: ab(CARD_W3, CARD_W4, 0.4, 1.3, d) }} x={0.5} y={y + 0.5} height={h} stroke={GRID} fill="none" />
-        </G>
-      ))}
-
-      {/* the new card: AI marks the free slot (dashed), fills it, then it settles (solid) */}
-      <G t={{ opacity: [[0, 0], [1.2, 0], [1.4, 1], [2.3, 1], [2.45, 0], [d, 0]] }}>
-        <EdgeBox x={CARDS4[3]} y={y} w={CARD_W4} h={h} dashed />
-      </G>
-      <G t={{ opacity: ab(0, 1, 1.5, 2.0, d) }}>
-        <path d={cellsPath(CARDS4[3], y, 5, 4)} stroke={GRID} fill="none" />
-      </G>
-      <G t={{ opacity: ab(0, 1, 2.3, 2.45, d) }}>
-        <rect x={CARDS4[3] + 0.5} y={y + 0.5} width={CARD_W4} height={h} stroke={EDGE} fill="none" />
-      </G>
-    </>
-  );
-}
 
 /* ── 03 REVIEW pieces (shared with /sanity/review-variants); the hero uses variant C · approve ── */
 
@@ -419,7 +325,242 @@ export function ReviewApprove() {
   );
 }
 
-const PANELS = [AskPanel, BuildPanel, ReviewApprove];
+/* ── LITERAL hero panels (founder-readable): real copy, named sections, statuses ── */
+
+function MonoT({ x, y, children, color = MID, size = 6.5, anchor }: { x: number; y: number; children: string; color?: string; size?: number; anchor?: "start" | "middle" | "end" }) {
+  return (
+    <text x={x} y={y} fill={color} fontSize={size} letterSpacing="0.2" textAnchor={anchor} style={{ fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+      {children}
+    </text>
+  );
+}
+function SansT({ x, y, children, color = "#cfcfcf", size = 9 }: { x: number; y: number; children: string; color?: string; size?: number }) {
+  return (
+    <text x={x} y={y} fill={color} fontSize={size} letterSpacing="-0.2" style={{ fontFamily: "var(--font-sans)" }}>
+      {children}
+    </text>
+  );
+}
+/** Text typed in left → right inside a growing clip. */
+function TypedT({ id, x, y, w, t0, t1, children, size = 9, color }: { id: string; x: number; y: number; w: number; t0: number; t1: number; children: string; size?: number; color?: string }) {
+  const d = useDur();
+  return (
+    <>
+      <defs>
+        <clipPath id={id}>
+          <R t={{ width: ab(0, w, t0, t1, d) }} linear={["width"]} x={x - 1} y={y - size} height={size * 1.6} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${id})`}>
+        <SansT x={x} y={y} size={size} color={color}>{children}</SansT>
+      </g>
+    </>
+  );
+}
+
+const REQUEST_LINES = ["Create an NYC version of our event page for", "enterprise security teams. Reuse the existing", "template and customer stories."];
+
+function AskLiteral() {
+  const d = useDur();
+  return (
+    <>
+      <Header>
+        <path d="M10.5 10.5h14v10h-8l-3 3v-3h-3z" stroke={MID} strokeWidth="0.75" fill="none" />
+        <MonoT x={32} y={19.5}>New request</MonoT>
+        <MonoT x={310} y={19.5} anchor="end" color="#666">Talk to your LLM</MonoT>
+      </Header>
+
+      {/* composer: the request is typed */}
+      <rect x="10.5" y="166.5" width="299" height="60" stroke={LINE} fill="none" />
+      <G t={{ opacity: ab(1, 0, 2.5, 2.7, d) }}>
+        {REQUEST_LINES.map((l, i) => (
+          <TypedT key={i} id={`ask${i}`} x={20} y={182 + i * 12} w={[205, 210, 140][i]} t0={0.3 + i * 0.65} t1={0.9 + i * 0.65} size={8.5}>{l}</TypedT>
+        ))}
+      </G>
+      <G t={{ opacity: [[0, 0.45], [2.2, 0.45], [2.35, 1], [2.9, 1], [3.2, 0.45], [d, 0.45]] }}>
+        <rect x="281.5" y="198.5" width="20" height="20" stroke={HI} fill="none" />
+        <path d="M286.5 208.5h10M292.5 204.5l4 4-4 4" stroke={HI} strokeWidth="1" fill="none" />
+      </G>
+
+      {/* sent — a person (solid avatar) */}
+      <G t={{ opacity: ab(0, 1, 2.5, 2.9, d), y: ab(14, 0, 2.5, 3.0, d) }}>
+        <rect x="52.5" y="44.5" width="236" height="52" stroke={SOFT} fill="#222" />
+        {REQUEST_LINES.map((l, i) => <SansT key={i} x={62} y={60 + i * 12} size={8.5}>{l}</SansT>)}
+        <circle cx="302" cy="90.5" r="6" fill={HI} />
+      </G>
+
+      {/* AI picks it up */}
+      <G t={{ opacity: ab(0, 1, 3.0, 3.3, d) }}>
+        <circle cx="16.5" cy="120.5" r="6" stroke={MID} strokeDasharray="1.8 1.8" fill="none" />
+        <MonoT x={30} y={123}>Building a draft in Sanity</MonoT>
+        {[0, 1, 2].map((i) => (
+          <R key={i} t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }} x={140 + i * 6} y={119} width="3" height="3" fill={MID} />
+        ))}
+      </G>
+    </>
+  );
+}
+
+const LIB = ["Hero", "Logos", "Speakers", "Stories", "Form"];
+const LIB_REST = ["Stats", "Schedule"];
+const BUILT: { name: string; y: number; h: number }[] = [
+  { name: "Hero", y: 44, h: 42 },
+  { name: "Logos", y: 92, h: 14 },
+  { name: "Speakers", y: 112, h: 40 },
+  { name: "Stories", y: 158, h: 28 },
+  { name: "Form", y: 192, h: 24 },
+];
+
+function BuildLiteral() {
+  const d = useDur();
+  const PX = 88, PW = 222;
+  return (
+    <>
+      <Header>
+        <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
+        <MonoT x={32} y={19.5}>Sanity Studio · Events</MonoT>
+        <G t={{ opacity: ab(1, 0, 3.15, 3.3, d) }}>
+          <MonoT x={310} y={19.5} anchor="end" color="#666">Building…</MonoT>
+        </G>
+        <G t={{ opacity: ab(0, 1, 3.25, 3.45, d) }}>
+          <MonoT x={310} y={19.5} anchor="end" color={HI}>Draft ready</MonoT>
+        </G>
+      </Header>
+
+      {/* approved section library */}
+      <MonoT x={10} y={46} size={5.5} color="#666">Approved sections</MonoT>
+      {[...LIB, ...LIB_REST].map((n, i) => (
+        <g key={n}>
+          <rect x="10.5" y={52.5 + i * 20} width="66" height="15" stroke="#383838" fill="#202020" />
+          <MonoT x={16} y={62.5 + i * 20} size={5.5} color={i < LIB.length ? MID : "#555"}>{n}</MonoT>
+        </g>
+      ))}
+
+      {/* empty slots of the event template, waiting for sections */}
+      {BUILT.map((b) => (
+        <rect key={b.name} x={PX + 0.5} y={b.y + 0.5} width={PW} height={b.h} stroke="#333" strokeDasharray="2 3" fill="none" />
+      ))}
+      {BUILT.map((b, i) => {
+        const s = 0.2 + i * 0.6;
+        return (
+          <g key={b.name}>
+            {/* chip picked */}
+            <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.5, 1], [s + 0.6, 0], [d, 0]] }}>
+              <EdgeBox x={10} y={52 + i * 20} w={66} h={15} dashed />
+            </G>
+            <G t={{ opacity: ab(0, 1, s + 0.1, s + 0.3, d) }}>
+              <rect x="10.5" y={52.5 + i * 20} width="66" height="15" stroke={EDGE} fill="none" />
+              <MonoT x={16} y={62.5 + i * 20} size={5.5} color={HI}>{b.name}</MonoT>
+            </G>
+            {/* section placed on the page */}
+            <G t={{ opacity: ab(0, 1, s + 0.2, s + 0.45, d) }}>
+              <rect x={PX + 0.5} y={b.y + 0.5} width={PW} height={b.h} fill="#202020" stroke="#383838" />
+              <MonoT x={PX + 6} y={b.y + 9} size={5} color="#777">{b.name}</MonoT>
+              {b.name === "Hero" && <SansT x={PX + 6} y={b.y + 28} size={11}>NYC Security Summit</SansT>}
+              {b.name === "Logos" && [0, 1, 2, 3, 4].map((k) => <rect key={k} x={PX + 60 + k * 32} y={b.y + 5} width="20" height="4" fill="#555" />)}
+              {b.name === "Speakers" && [0, 1, 2, 3].map((k) => <rect key={k} x={PX + 6.5 + k * 54} y={b.y + 15.5} width="18" height="18" stroke="#555" fill="none" />)}
+              {b.name === "Stories" && <SansT x={PX + 6} y={b.y + 21} size={8}>“Our strongest rollout yet.” — Acme</SansT>}
+              {b.name === "Form" && (
+                <>
+                  <rect x={PX + 6.5} y={b.y + 11.5} width="120" height="9" stroke="#555" fill="none" />
+                  <rect x={PX + 132.5} y={b.y + 11.5} width="50" height="9" stroke="#777" fill="none" />
+                </>
+              )}
+            </G>
+            <G t={{ opacity: [[0, 0], [s + 0.15, 0], [s + 0.25, 1], [s + 0.55, 1], [s + 0.65, 0], [d, 0]] }}>
+              <EdgeBox x={PX} y={b.y} w={PW} h={b.h} dashed />
+            </G>
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
+function ReviewLiteral() {
+  const d = useDur();
+  const X = 20, W = 280;
+  const boxes: [number, number, number, number][] = [[X, 44, W, 12], [X, 62, W, 58], [X, 126, W, 34], [X, 166, W, 34], [X, 206, W, 12]];
+  return (
+    <>
+      <Header>
+        <MonoT x={10} y={19.5} color="#666">acme.com/nyc-summit</MonoT>
+        <G t={{ opacity: ab(1, 0, 4.85, 5.05, d) }}>
+          <MonoT x={271} y={19.5} anchor="end">Draft</MonoT>
+        </G>
+        <G t={{ opacity: ab(0, 1, 4.95, 5.25, d) }}>
+          <MonoT x={271} y={19.5} anchor="end" color={HI}>Live</MonoT>
+        </G>
+        <rect x="278.5" y="10.5" width="31" height="12" rx="6" stroke={SOFT} fill="none" />
+        <R t={{ opacity: ab(0, 1, 4.8, 5.2, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
+        <G t={{ x: ab(0, 18, 4.8, 5.2, d) }}>
+          <circle cx="285" cy="16.5" r="4" fill={MID} />
+        </G>
+        <G t={{ x: ab(0, 18, 4.8, 5.2, d), opacity: ab(0, 1, 4.95, 5.2, d) }}>
+          <circle cx="285" cy="16.5" r="4" fill={HI} />
+        </G>
+      </Header>
+
+      {/* nav */}
+      <rect x={X + 0.5} y="44.5" width={W} height="12" fill="#202020" stroke="#333" />
+      <MonoT x={X + 6} y={52.5} size={5}>Summit / NYC</MonoT>
+      <MonoT x={X + W - 6} y={52.5} size={5} anchor="end">Speakers   Schedule   Register</MonoT>
+
+      {/* hero — the person rewrites the headline */}
+      <rect x={X + 0.5} y="62.5" width={W} height="58" fill="#202020" stroke="#333" />
+      <MonoT x={X + 8} y={74} size={5}>Enterprise security summit</MonoT>
+      <G t={{ opacity: ab(1, 0, 1.35, 1.55, d) }}>
+        <SansT x={X + 8} y={91} size={13}>Build trust into</SansT>
+        <SansT x={X + 8} y={106} size={13}>every layer.</SansT>
+      </G>
+      <TypedT id="rv1" x={X + 8} y={91} w={130} t0={1.6} t1={2.0} size={13}>Security leaders,</TypedT>
+      <TypedT id="rv2" x={X + 8} y={106} w={130} t0={2.0} t1={2.35} size={13}>meet in New York.</TypedT>
+      <rect x={X + 200.5} y="98.5" width="64" height="13" stroke="#666" fill="none" />
+      <MonoT x={X + 232} y={107} size={5} anchor="middle">Register</MonoT>
+      <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.4, 1], [2.6, 0], [d, 0]] }}>
+        <EdgeBox x={X + 4} y={80} w={150} h={32} />
+      </G>
+
+      {/* speakers ↓ / stories ↑ — the person drags stories above speakers */}
+      <G t={{ y: ab(0, 40, 3.0, 3.8, d) }}>
+        <rect x={X + 0.5} y="126.5" width={W} height="34" fill="#202020" stroke="#333" />
+        <MonoT x={X + 6} y={135} size={5} color="#777">Speakers</MonoT>
+        {[0, 1, 2, 3].map((k) => (
+          <g key={k}>
+            <rect x={X + 6.5 + k * 68} y="140.5" width="14" height="14" stroke="#555" fill="none" />
+            <rect x={X + 25 + k * 68} y="144" width="34" height="2" fill="#555" />
+            <rect x={X + 25 + k * 68} y="149" width="24" height="2" fill="#444" />
+          </g>
+        ))}
+      </G>
+      <G t={{ y: ab(0, -40, 3.0, 3.8, d) }}>
+        <rect x={X + 0.5} y="166.5" width={W} height="34" fill="#202020" stroke="#333" />
+        <MonoT x={X + 6} y={175} size={5} color="#777">Customer stories</MonoT>
+        <SansT x={X + 6} y={190} size={8.5}>“Our strongest rollout, with zero surprises.”</SansT>
+        <G t={{ opacity: [[0, 0], [2.85, 0], [2.95, 1], [3.9, 1], [4.1, 0], [d, 0]] }}>
+          <EdgeBox x={X} y={166} w={W} h={34} />
+        </G>
+      </G>
+
+      {/* footer */}
+      <rect x={X + 0.5} y="206.5" width={W} height="12" fill="#202020" stroke="#333" />
+
+      {/* live */}
+      <GoLive id="lit" t={5.2} boxes={boxes} />
+
+      <Person
+        t={{
+          x: [[0, 300], [0.4, 300], [1.1, 90], [2.4, 90], [2.85, 200], [3.8, 200], [4.7, 290], [d, 290]],
+          y: [[0, 236], [0.4, 236], [1.1, 96], [2.4, 96], [2.85, 184], [3.0, 184], [3.8, 144], [4.7, 18], [d, 18]],
+          opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
+          scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
+        }}
+      />
+    </>
+  );
+}
+
+const PANELS = [AskLiteral, BuildLiteral, ReviewLiteral];
 
 export function ProductFragments() {
   const ref = useRef<HTMLDivElement>(null);
