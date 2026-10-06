@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { motion, useInView } from "motion/react";
 import { cn } from "@/lib/utils";
 import { examples } from "./examples-data";
 import { RequestScene } from "./request-scenes";
@@ -13,6 +13,8 @@ const num = (i: number) => String(i + 1).padStart(2, "0");
 /** `aspect(i)` = height / width of example i's illustration; the pinned box follows it (capped at 46% of the screen). */
 export function ExamplesPinned({ aspect = () => 204 / 480 }: { aspect?: (i: number) => number } = {}) {
   const [i, setI] = useState(0);
+  const wrap = useRef<HTMLDivElement>(null);
+  const seen = useInView(wrap, { margin: "-20% 0px" });
   const items = useRef<(HTMLDivElement | null)[]>([]);
   const pin = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -45,7 +47,7 @@ export function ExamplesPinned({ aspect = () => 204 / 480 }: { aspect?: (i: numb
     return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); };
   }, []);
   return (
-    <div className="relative">
+    <div ref={wrap} className="relative">
       <div ref={pin} className="sticky top-[72px] z-10 flex flex-col gap-5 bg-off-black pb-6 pt-4">
         {/* four steps + counter on top, the illustration below */}
         <div className="flex items-center gap-4">
@@ -57,16 +59,21 @@ export function ExamplesPinned({ aspect = () => 204 / 480 }: { aspect?: (i: numb
           </p>
         </div>
         <div ref={boxRef} className="relative w-full transition-[height] duration-500 ease-in-out" style={height ? { height } : { aspectRatio: `1 / ${aspect(0)}` }}>
-          {examples.map((e, k) => (
-            <motion.div key={e.label} className="absolute inset-0" initial={false} animate={{ opacity: k === i ? 1 : 0 }} transition={{ duration: 0.5, ease }}>
-              <RequestScene index={k} active={k === i} fit scope="p" />
+          {/* illustrations slide sideways in step with the bars above */}
+          <div className="absolute inset-0 overflow-hidden">
+            <motion.div className="flex h-full" style={{ gap: 16 }} initial={false} animate={{ x: -i * (size.w + 16) }} transition={{ duration: 0.6, ease }}>
+              {examples.map((e, k) => (
+                <div key={e.label} className="relative h-full shrink-0" style={{ width: size.w || "100%" }}>
+                  <RequestScene index={k} active={seen && k === i} fit scope="p" />
+                </div>
+              ))}
             </motion.div>
-          ))}
+          </div>
         </div>
         {/* text scrolling up fades out under the pinned block instead of being cut */}
         <div className="pointer-events-none absolute inset-x-0 top-full h-20 bg-gradient-to-b from-off-black to-transparent" />
       </div>
-      <div className="flex flex-col gap-16 pt-4">
+      <div className="flex flex-col gap-16 pt-20">
         {examples.map((e, k) => (
           <div
             key={e.label}
