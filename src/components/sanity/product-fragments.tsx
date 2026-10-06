@@ -12,7 +12,7 @@ import { Actor, ActorTag } from "./actor";
  */
 
 type Phase = 0 | 1 | 2;
-const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 5.6 };
+const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
 
 const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
@@ -149,14 +149,24 @@ function AskPanel() {
   );
 }
 
-/* ── 02 BUILD: AI assembles the page from approved blocks ── */
+/* ── shared page layout: the same page is built in 02 and reviewed in 03 ── */
 
-const BLOCKS: { x: number; y: number; cols: number; rows: number }[][] = [
-  [{ x: 40, y: 48, cols: 24, rows: 1 }],
-  [{ x: 40, y: 64, cols: 24, rows: 5 }],
-  [{ x: 40, y: 122, cols: 24, rows: 1 }],
-  [{ x: 40, y: 140, cols: 7, rows: 4 }, { x: 125, y: 140, cols: 7, rows: 4 }, { x: 210, y: 140, cols: 7, rows: 4 }],
-  [{ x: 40, y: 188, cols: 24, rows: 3 }],
+const PAGE = { x: 40, w: 240 };
+const SLOT = {
+  hero: { y: 48, h: 50 },
+  logos: { y: 110, h: 10 },
+  cards: { y: 132, h: 40 },
+  cta: { y: 184, h: 30 },
+};
+const CARD_X = [40, 125, 210];
+
+/* ── 02 BUILD: AI places approved blocks into the page, one by one, in place ── */
+
+const BUILD: { key: keyof typeof SLOT; cells: { x: number; cols: number }[] }[] = [
+  { key: "hero", cells: [{ x: 40, cols: 24 }] },
+  { key: "logos", cells: [{ x: 40, cols: 24 }] },
+  { key: "cards", cells: CARD_X.map((x) => ({ x, cols: 7 })) },
+  { key: "cta", cells: [{ x: 40, cols: 24 }] },
 ];
 
 function BuildPanel() {
@@ -165,38 +175,39 @@ function BuildPanel() {
     <>
       <Header>
         <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
-        {BLOCKS.map((_, i) => (
-          <g key={i}>
-            <rect x={263.5 + i * 10} y="13.5" width="6" height="6" stroke={SOFT} fill="none" />
-            <R t={{ opacity: ab(0, 1, 0.75 + i * 0.6, 0.85 + i * 0.6, d) }} x={265 + i * 10} y={15} width="3" height="3" fill={MID} />
-          </g>
-        ))}
       </Header>
-      <rect x="36.5" y="44.5" width="248" height="182" stroke="#2e2e2e" fill="none" />
-      {BLOCKS.map((group, i) => {
-        const s = 0.25 + i * 0.6;
+      <rect x="36.5" y="44.5" width="248" height="174" stroke="#2e2e2e" fill="none" />
+      {BUILD.map((b, i) => {
+        const s = 0.3 + i * 0.75;
+        const { y, h } = SLOT[b.key];
         return (
-          <G key={i} t={{ opacity: ab(0, 1, s, s + 0.25, d), y: ab(-10, 0, s, s + 0.5, d) }}>
-            {group.map((b, j) => (
-              <g key={j}>
-                <rect x={b.x + 0.5} y={b.y + 0.5} width={b.cols * C} height={b.rows * C} fill={BG} />
-                <path d={cellsPath(b.x, b.y, b.cols, b.rows)} stroke={GRID} fill="none" />
-                <G t={{ opacity: [[0, 0], [s, 0], [s + 0.15, 1], [s + 0.7, 1], [s + 0.9, 0], [d, 0]] }}>
-                  <EdgeBox x={b.x} y={b.y} w={b.cols * C} h={b.rows * C} dashed />
-                </G>
-                <G t={{ opacity: ab(0, 1, s + 0.7, s + 0.9, d) }}>
-                  <rect x={b.x + 0.5} y={b.y + 0.5} width={b.cols * C} height={b.rows * C} stroke={EDGE} fill="none" />
-                </G>
-              </g>
-            ))}
-          </G>
+          <g key={b.key}>
+            {/* cells settle in place — no travel, no overlap */}
+            <G t={{ opacity: ab(0, 1, s + 0.15, s + 0.5, d) }}>
+              {b.cells.map((c) => (
+                <path key={c.x} d={cellsPath(c.x, y, c.cols, h / C)} stroke={GRID} fill="none" />
+              ))}
+            </G>
+            {/* AI at work: dashed edge + nodes, then a clean swap to a solid edge */}
+            <G t={{ opacity: [[0, 0], [s, 0], [s + 0.15, 1], [s + 0.6, 1], [s + 0.72, 0], [d, 0]] }}>
+              <EdgeBox x={PAGE.x} y={y} w={PAGE.w} h={h} dashed />
+            </G>
+            <G t={{ opacity: ab(0, 1, s + 0.6, s + 0.72, d) }}>
+              {b.cells.map((c) => (
+                <rect key={c.x} x={c.x + 0.5} y={y + 0.5} width={c.cols * C} height={h} stroke={EDGE} fill="none" />
+              ))}
+            </G>
+          </g>
         );
       })}
     </>
   );
 }
 
-/* ── 03 REVIEW: a person edits, then switches the page live ── */
+/* ── 03 REVIEW: a person edits the headline, reorders a section, then switches the page live ── */
+
+const BAR = "#5a5a5a";
+const BLOCK = { fill: "#252525", stroke: "#333" };
 
 function ReviewPanel() {
   const d = useDur();
@@ -207,50 +218,58 @@ function ReviewPanel() {
         {/* page address, as a placeholder line */}
         <rect x="10" y="15" width="64" height="3" fill="#444" />
         {/* draft → live switch: a state, not a button */}
-        <G t={{ opacity: ab(1, 0, 3.5, 3.7, d) }}>
+        <G t={{ opacity: ab(1, 0, 4.85, 5.05, d) }}>
           <text x="271" y="19.5" textAnchor="end" fill={MID} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>DRAFT</text>
         </G>
-        <G t={{ opacity: ab(0, 1, 3.6, 3.9, d) }}>
+        <G t={{ opacity: ab(0, 1, 4.95, 5.25, d) }}>
           <text x="271" y="19.5" textAnchor="end" fill={HI} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>LIVE</text>
         </G>
         <rect x="278.5" y="10.5" width="31" height="12" rx="6" stroke={SOFT} fill="none" />
-        <R t={{ opacity: ab(0, 1, 3.5, 3.85, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
-        <G t={{ x: ab(0, 18, 3.45, 3.85, d) }}>
+        <R t={{ opacity: ab(0, 1, 4.8, 5.2, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
+        <G t={{ x: ab(0, 18, 4.8, 5.2, d) }}>
           <circle cx="285" cy="16.5" r="4" fill={MID} />
         </G>
-        <G t={{ x: ab(0, 18, 3.45, 3.85, d), opacity: ab(0, 1, 3.6, 3.85, d) }}>
+        <G t={{ x: ab(0, 18, 4.8, 5.2, d), opacity: ab(0, 1, 4.95, 5.2, d) }}>
           <circle cx="285" cy="16.5" r="4" fill={HI} />
         </G>
       </Header>
 
-      {/* the page frame: dim while draft, lit once live (stays lit) */}
-      <R t={{ stroke: ab("#2e2e2e", EDGE, 3.9, 4.5, d) }} x={36.5} y={44.5} width={248} height={182} fill="none" />
+      {/* page frame: dim while draft, lit once live (stays lit) */}
+      <R t={{ stroke: ab("#2e2e2e", EDGE, 5.2, 5.7, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
 
-      {/* the page from step 02, rendered */}
-      <G t={{ opacity: ab(0, 1, 0, 0.5, d) }}>
-        <rect x="40.5" y="48.5" width="240" height="10" fill="#242424" />
-        <rect x="46" y="52" width="24" height="3" fill="#555" />
-        <rect x="40.5" y="64.5" width="240" height="50" fill="#262626" stroke="#333" />
-        <R t={{ scaleX: ab(1, 0.72, 1.75, 2.2, d) }} x={52} y={76} width={150} height={6} fill="#9a9a9a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
-        <rect x="52" y="88" width="96" height="6" fill="#9a9a9a" />
-        <rect x="52" y="102" width="60" height="3" fill="#555" />
-        {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={52 + i * 46} y="124" width="26" height="6" fill="#3a3a3a" />)}
-        {[40, 125, 210].map((x) => (
+      {/* hero — the headline gets rewritten */}
+      <rect x="40.5" y="48.5" width="240" height="50" {...BLOCK} />
+      <R
+        t={{ scaleX: [[0, 1], [1.3, 1], [1.5, 0], [2.1, 0.7], [d, 0.7]] }}
+        linear={["scaleX"]}
+        x={52} y={62} width={150} height={6} fill={BAR}
+        style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }}
+      />
+      <rect x="52" y="74" width="96" height="6" fill={BAR} />
+      <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.3, 1], [2.5, 0], [d, 0]] }}>
+        <EdgeBox x={47} y={56} w={160} h={30} />
+      </G>
+
+      {/* cards move up as the logo row is dragged below them */}
+      <G t={{ y: ab(0, -22, 2.9, 3.7, d) }}>
+        {CARD_X.map((x) => (
           <g key={x}>
-            <rect x={x + 0.5} y="140.5" width="70" height="40" fill="#242424" stroke="#333" />
-            <rect x={x + 7} y="160" width="44" height="3" fill="#555" />
-            <rect x={x + 7} y="168" width="30" height="3" fill="#444" />
+            <rect x={x + 0.5} y="132.5" width="70" height="40" {...BLOCK} />
+            <rect x={x + 8} y="150" width="40" height="3" fill={BAR} />
           </g>
         ))}
-        <rect x="40.5" y="188.5" width="240" height="30" fill="#262626" stroke="#333" />
-        <rect x="52" y="201" width="80" height="4" fill="#666" />
-        <rect x="234" y="198" width="36" height="10" fill="#444" />
+      </G>
+      <G t={{ y: ab(0, 52, 2.9, 3.7, d) }}>
+        <rect x="40.5" y="110.5" width="240" height="10" {...BLOCK} />
+        {[0, 1, 2, 3].map((i) => <rect key={i} x={58 + i * 58} y="114" width="28" height="3" fill={BAR} />)}
+        <G t={{ opacity: [[0, 0], [2.75, 0], [2.85, 1], [3.8, 1], [4.0, 0], [d, 0]] }}>
+          <EdgeBox x={40} y={110} w={240} h={10} />
+        </G>
       </G>
 
-      {/* the person's edit: solid edge on the headline */}
-      <G t={{ opacity: [[0, 0], [1.55, 0], [1.65, 1], [2.6, 1], [2.9, 0], [d, 0]] }}>
-        <EdgeBox x={47} y={71} w={160} h={28} />
-      </G>
+      {/* cta */}
+      <rect x="40.5" y="184.5" width="240" height="30" {...BLOCK} />
+      <rect x="52" y="198" width="80" height="3" fill={BAR} />
 
       {/* goes live: light sweep across the page */}
       <defs>
@@ -260,23 +279,23 @@ function ReviewPanel() {
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
         <mask id={`hm${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="240">
-          <R t={{ x: ab(-160, 340, 3.9, 5.2, d) }} y={40} width={160} height={200} fill={`url(#hg${id})`} />
+          <R t={{ x: ab(-160, 340, 5.2, 6.4, d) }} y={40} width={160} height={200} fill={`url(#hg${id})`} />
         </mask>
       </defs>
       <g mask={`url(#hm${id})`} stroke="#bdbdbd" fill="none">
-        <rect x="40.5" y="48.5" width="240" height="10" />
-        <rect x="40.5" y="64.5" width="240" height="50" />
-        {[40, 125, 210].map((x) => <rect key={x} x={x + 0.5} y="140.5" width="70" height="40" />)}
-        <rect x="40.5" y="188.5" width="240" height="30" />
+        <rect x="40.5" y="48.5" width="240" height="50" />
+        {CARD_X.map((x) => <rect key={x} x={x + 0.5} y="110.5" width="70" height="40" />)}
+        <rect x="40.5" y="162.5" width="240" height="10" />
+        <rect x="40.5" y="184.5" width="240" height="30" />
       </g>
 
-      {/* the person: cursor goes to the headline, edits, then flips the switch */}
+      {/* the person: edits the headline, drags the logo row down, flips the switch */}
       <G
         t={{
-          x: [[0, 300], [0.6, 300], [1.5, 150], [2.4, 150], [3.3, 290], [d, 290]],
-          y: [[0, 236], [0.6, 236], [1.5, 84], [2.4, 84], [3.3, 18], [d, 18]],
-          opacity: [[0, 0], [0.6, 0], [0.8, 1], [4.4, 1], [4.9, 0], [d, 0]],
-          scale: [[0, 1], [1.5, 1], [1.58, 0.82], [1.68, 1], [3.35, 1], [3.43, 0.82], [3.53, 1], [d, 1]],
+          x: [[0, 300], [0.4, 300], [1.15, 130], [2.2, 130], [2.75, 170], [3.7, 170], [4.7, 290], [d, 290]],
+          y: [[0, 236], [0.4, 236], [1.15, 66], [2.2, 66], [2.75, 116], [2.9, 116], [3.7, 168], [4.7, 18], [d, 18]],
+          opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
+          scale: [[0, 1], [1.15, 1], [1.22, 0.82], [1.32, 1], [2.75, 1], [2.82, 0.85], [3.7, 0.85], [3.8, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
         }}
       >
         <Cursor />
@@ -307,12 +326,12 @@ export function ProductFragments() {
     <div ref={ref} className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
       {PANELS.map((Panel, i) => {
         const idx = i as Phase;
-        const mode: Mode = reduce ? "after" : phase === idx ? "play" : phase > idx ? "after" : "before";
+        const mode: Mode = !reduce && phase === idx ? "play" : "after";
         return (
           <Step key={i} index={idx} phase={reduce ? 3 : phase} cycle={cycle}>
             <div className={cn("relative aspect-[4/3] w-full border bg-[#1c1c1c] transition-colors duration-700", !reduce && phase === idx ? "border-[#4a4a4a]" : "border-dark-grey")}>
               <PanelCtx.Provider value={{ mode, dur: PHASE_S[idx] }}>
-                <svg key={`${cycle}-${mode}`} aria-hidden viewBox="0 0 320 240" fill="none" className="absolute inset-0 h-full w-full">
+                <svg key={`${cycle}-${mode}`} aria-hidden viewBox="0 0 320 240" fill="none" className={cn("absolute inset-0 h-full w-full transition-opacity duration-700", mode === "play" || reduce ? "opacity-100" : "opacity-45")}>
                   <Panel />
                 </svg>
               </PanelCtx.Provider>

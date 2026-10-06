@@ -72,12 +72,25 @@ const cellsPath = (x: number, y: number, cols: number, rows: number) => {
 };
 
 /** Grid block; the background fill keeps overlapping outlines clean when blocks move. */
-function Cells({ x, y, cols, rows, stroke = GRID }: { x: number; y: number; cols: number; rows: number; stroke?: string }) {
+function Cells({ x, y, cols, rows, stroke = GRID, label, labelColor }: { x: number; y: number; cols: number; rows: number; stroke?: string; label?: string; labelColor?: string }) {
   return (
     <>
       <rect x={x + 0.5} y={y + 0.5} width={cols * C} height={rows * C} fill={BG} />
       <path d={cellsPath(x, y, cols, rows)} stroke={stroke} strokeWidth="1" fill="none" />
+      {label && <Label x={x} y={y} color={labelColor}>{label}</Label>}
     </>
+  );
+}
+
+/** Section name, as in the V1 section library (HERO, SPEAKERS, STORIES…). */
+function Label({ x, y, children, color = MUTED }: { x: number; y: number; children: string; color?: string }) {
+  return (
+    <g>
+      <rect x={x + 2} y={y + 2} width={children.length * 4.6 + 5} height="9" fill={BG} />
+      <text x={x + 4.5} y={y + 9} fill={color} fontSize="7" letterSpacing="-0.1" style={{ fontFamily: "var(--font-mono)" }}>
+        {children}
+      </text>
+    </g>
   );
 }
 
@@ -155,9 +168,9 @@ const FADE: Track = [[0, 1], [6.25, 1], [6.5, 0], [6.75, 0], [D, 1]];
 function SceneEvent() {
   const L = 16, P = 272, dx = P - L;
   const picks = [
-    { y: 20, cols: 16, rows: 3, to: 40 },
-    { y: 64, cols: 8, rows: 3, to: 84 },
-    { y: 108, cols: 10, rows: 3, to: 128 },
+    { y: 20, cols: 16, rows: 3, to: 40, label: "HERO" },
+    { y: 64, cols: 8, rows: 3, to: 84, label: "SPEAKERS" },
+    { y: 108, cols: 10, rows: 3, to: 128, label: "STORIES" },
   ];
   return (
     <G t={{ opacity: FADE }}>
@@ -165,14 +178,14 @@ function SceneEvent() {
       <Tag x={P} y={10}>NEW PAGE</Tag>
 
       {/* library */}
-      <Cells x={L} y={20} cols={16} rows={3} />
-      <Cells x={L} y={64} cols={8} rows={3} />
-      <Cells x={L + 9 * C} y={64} cols={7} rows={3} />
-      <Cells x={L} y={108} cols={10} rows={3} />
-      <Cells x={L + 11 * C} y={108} cols={5} rows={3} />
-      <Cells x={L} y={152} cols={6} rows={2} />
-      <Cells x={L + 7 * C} y={152} cols={9} rows={2} />
-      <Cells x={L} y={184} cols={16} rows={1} />
+      <Cells x={L} y={20} cols={16} rows={3} label="HERO" />
+      <Cells x={L} y={64} cols={8} rows={3} label="SPEAKERS" />
+      <Cells x={L + 9 * C} y={64} cols={7} rows={3} label="LOGOS" />
+      <Cells x={L} y={108} cols={10} rows={3} label="STORIES" />
+      <Cells x={L + 11 * C} y={108} cols={5} rows={3} label="STATS" />
+      <Cells x={L} y={152} cols={6} rows={2} label="FORM" />
+      <Cells x={L + 7 * C} y={152} cols={9} rows={2} label="SCHEDULE" />
+      <Cells x={L} y={184} cols={16} rows={1} label="FEATURES" />
 
       {/* page from the template: frame + nav */}
       <rect x={P + 0.5} y={20.5} width={16 * C} height={176} stroke="#333" fill="none" />
@@ -185,6 +198,7 @@ function SceneEvent() {
           <G key={i} t={{ x: ev(0, dx, s + 0.6, s + 1.4), y: ev(0, p.to - p.y, s + 0.6, s + 1.4), opacity: show(s, 0.3) }}>
             <rect x={L + 0.5} y={p.y + 0.5} width={p.cols * C} height={p.rows * C} fill={BG} />
             <path d={cellsPath(L, p.y, p.cols, p.rows)} stroke={CHANGED_CELL} strokeWidth="1" fill="none" />
+            <Label x={L} y={p.y} color="#efefef">{p.label}</Label>
             <Edge x={L} y={p.y} cols={p.cols} rows={p.rows} dashed t={pulse(s, s + 1.4)} />
             <Edge x={L} y={p.y} cols={p.cols} rows={p.rows} color={CHANGED_EDGE} nodes={false} t={show(s + 1.5)} />
           </G>
@@ -208,21 +222,21 @@ function SceneReport() {
   return (
     <G t={{ opacity: FADE }}>
       <Cells x={X} y={6} cols={W} rows={1} />
-      <Cells x={X} y={24} cols={W} rows={2} />
+      <Cells x={X} y={24} cols={W} rows={2} label="HERO" />
 
       {/* customer proof drops a slot, findings move to the top */}
       <G t={{ y: ev(0, 44, 1.2, 2) }}>
-        <Cells x={X} y={56} cols={W} rows={3} />
+        <Cells x={X} y={56} cols={W} rows={3} label="STORIES" />
       </G>
       <G t={{ y: ev(0, -44, 1.2, 2) }}>
-        <Cells x={X} y={100} cols={W} rows={3} />
+        <Cells x={X} y={100} cols={W} rows={3} label="FINDINGS" />
         <Changed x={X} y={100} cols={W} rows={3} t={show(2)} />
         <Edge x={X} y={100} cols={W} rows={3} dashed t={pulse(0.6, 2.0)} />
       </G>
 
       {/* gated report: dims and locks behind the form, opens after the email */}
       <G t={{ opacity: [[0, 1], [2.4, 1], [2.8, 0.3], [4.1, 0.3], [4.4, 1], [D, 1]] }}>
-        <Cells x={X} y={164} cols={W} rows={3} />
+        <Cells x={X} y={164} cols={W} rows={3} label="REPORT" />
       </G>
       <Changed x={X} y={164} cols={W} rows={3} t={show(4.2)} />
       <G t={{ opacity: [[0, 0], [2.6, 0], [2.9, 1], [4.0, 1], [4.3, 0], [D, 0]] }}>
@@ -296,8 +310,8 @@ function SceneHomepage() {
   return (
     <G t={{ opacity: FADE }}>
       {/* protected by your rules: navigation + legal */}
-      <Cells x={X} y={6} cols={W} rows={1} />
-      <Cells x={X} y={178} cols={W} rows={1} />
+      <Cells x={X} y={6} cols={W} rows={1} label="NAVIGATION" />
+      <Cells x={X} y={178} cols={W} rows={1} label="LEGAL" />
       <Edge x={X} y={6} cols={W} rows={1} t={show(0.4)} />
       <Edge x={X} y={178} cols={W} rows={1} t={show(0.4)} />
       <G t={{ opacity: show(0.4) }}>
@@ -306,7 +320,7 @@ function SceneHomepage() {
       </G>
 
       {/* hero headline: replaced */}
-      <Cells x={X} y={26} cols={W} rows={3} />
+      <Cells x={X} y={26} cols={W} rows={3} label="HERO" />
       {NOISE_HOME.map((n, i) => (
         <R key={i} t={{ opacity: n.t }} x={X + n.k * C + 1} y={26 + n.row * C + 1} width={C - 1} height={C - 1} fill={n.fill} />
       ))}
@@ -315,16 +329,16 @@ function SceneHomepage() {
 
       {/* product tour slides down, customer logos move above it */}
       <G t={{ y: ev(0, 20, 3.4, 4.2) }}>
-        <Cells x={X} y={70} cols={W} rows={3} />
+        <Cells x={X} y={70} cols={W} rows={3} label="PRODUCT TOUR" />
       </G>
       <G t={{ y: ev(0, -44, 3.4, 4.2) }}>
-        <Cells x={X} y={114} cols={W} rows={1} />
+        <Cells x={X} y={114} cols={W} rows={1} label="LOGOS" />
         <Changed x={X} y={114} cols={W} rows={1} t={show(4.2)} />
         <Edge x={X} y={114} cols={W} rows={1} dashed t={pulse(3.0, 4.2)} />
       </G>
 
       {/* quote: swapped */}
-      <Cells x={X} y={134} cols={W} rows={3} />
+      <Cells x={X} y={134} cols={W} rows={3} label="QUOTE" />
       <R t={{ scaleX: ev(0, 1, 4.8, 5.4) }} x={X + 0.5} y={134.5} width={W * C} height={36} fill="#2a2a2a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
       <Changed x={X} y={134} cols={W} rows={3} t={show(5.3)} />
       <Edge x={X} y={134} cols={W} rows={3} dashed t={pulse(4.5, 5.5)} />
@@ -339,12 +353,12 @@ function SceneHomepage() {
 const SPLIT = [0.5, 1.3] as const;
 
 /** Constant visitor stream: half goes to A, half to B; some convert on the CTA. */
-const VISITORS = Array.from({ length: 8 }).map((_, j) => {
+const VISITORS = Array.from({ length: 5 }).map((_, j) => {
   const toB = j % 2 === 1;
-  const converts = toB ? [1, 3, 7].includes(j) : [0, 4].includes(j);
-  return { s: 1.5 + j * 0.42, toB, converts };
+  const converts = toB ? [1, 3].includes(j) : [0].includes(j);
+  return { s: 1.6 + j * 0.6, toB, converts };
 });
-const TRAVEL = { down: 0.8, across: 0.7 };
+const TRAVEL = { down: 1.1, across: 0.9 };
 const METER = 8;
 
 function Page({ variant }: { variant: "A" | "B" }) {
@@ -355,7 +369,7 @@ function Page({ variant }: { variant: "A" | "B" }) {
       <Cells x={0} y={6} cols={14} rows={1} />
       <Cells x={0} y={26} cols={14} rows={3} />
       <Cells x={0} y={70} cols={14} rows={4} />
-      <Cells x={0} y={126} cols={5} rows={1} />
+      <Cells x={0} y={126} cols={5} rows={1} label="REGISTER" />
       <Cells x={0} y={146} cols={14} rows={1} />
       {b && (
         <>
@@ -475,7 +489,13 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
   );
 }
 
-const TRAFFIC = Array.from({ length: 6 }).map((_, i) => ({ row: i % 2, delay: i * 1.05 }));
+/** Edits a person makes on the live Webflow site during the migration (the one at col 4 gets re-imported). */
+const EDITS = [
+  { col: 22, row: 1, t: 0.9 },
+  { col: 14, row: 0, t: 1.9 },
+  { col: 26, row: 1, t: 3.0 },
+  { col: 8, row: 1, t: 4.3 },
+];
 
 export function MigrationLanes() {
   const ref = useRef<SVGSVGElement>(null);
@@ -507,21 +527,17 @@ export function MigrationLanes() {
         <rect x="0.5" y="112.5" width={30 * M} height={2 * M} stroke="#3a3a3a" strokeDasharray="2 3" fill="none" />
 
         <G t={{ opacity: FADE }}>
-          {/* visitors keep using the live site the whole time — then use the new one */}
-          <G t={{ y: ev(0, 90, 5.4, 5.9) }}>
-            {TRAFFIC.map((v, i) => (
-              <motion.rect
-                key={i}
-                x={-4}
-                y={22 + v.row * M + M / 2 - 2}
-                width="4"
-                height="4"
-                fill={MUTED}
-                initial={{ x: 0, opacity: 0 }}
-                animate={on ? { x: [0, 600], opacity: [0, 1, 1, 0] } : { x: 0, opacity: 0 }}
-                transition={on ? { duration: 6.3, ease: "linear", repeat: Infinity, delay: v.delay, opacity: { duration: 6.3, times: [0, 0.05, 0.95, 1], repeat: Infinity, delay: v.delay } } : { duration: 0.3 }}
-              />
-            ))}
+          {/* no content freeze: the team keeps editing on the live site while content moves */}
+          {EDITS.map((e, i) => (
+            <G key={i} t={{ opacity: pulse(e.t, e.t + 0.7) }}>
+              <rect x={e.col * M + 0.5} y={22 + e.row * M + 0.5} width={M} height={M} stroke={SEL} fill="none" />
+              <rect x={e.col * M + 7} y={22 + e.row * M + 7} width="7" height="7" fill={SEL} />
+            </G>
+          ))}
+          {/* …and keeps editing in Sanity after the switch */}
+          <G t={{ opacity: [[0, 0], [5.95, 0], [6.1, 1], [D, 1]] }}>
+            <rect x={13 * M + 0.5} y={113.5} width={M} height={M} stroke={SEL} fill="none" />
+            <rect x={13 * M + 7} y={120} width="7" height="7" fill={SEL} />
           </G>
 
           <Import col={0} cols={10} s={0.4} />
@@ -540,7 +556,10 @@ export function MigrationLanes() {
           </G>
 
           {/* content changes on the live site (a person edits) → re-imported, no freeze */}
-          <MEdge x={4 * M} y={22} w={M} h={M} t={pulse(2.6, 3.4)} />
+          <G t={{ opacity: pulse(2.6, 3.4) }}>
+            <rect x={4 * M + 0.5} y={22.5} width={M} height={M} stroke={SEL} fill="none" />
+            <rect x={4 * M + 7} y={29} width="7" height="7" fill={SEL} />
+          </G>
           <G t={{ opacity: pulse(3.3, 4.2) }}>
             <line x1={4.5 * M + 0.5} y1="64" x2={4.5 * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
           </G>

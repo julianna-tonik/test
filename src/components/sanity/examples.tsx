@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
-import { List, ListItem } from "@/components/ui/list-item";
 import { cn } from "@/lib/utils";
 import { ScrollText, SectionLabel } from "./shared";
 import { RequestScene } from "./request-scenes";
@@ -12,25 +11,21 @@ const examples = [
     label: "NYC Security Summit",
     request:
       "“We're hosting the NYC Security Summit for enterprise security teams. Create the event page, feature this year's speakers and our strongest security customer proof, and save it as a draft.”",
-    result: ["Event page from the existing template", "This year's speakers", "Strongest security customer proof", "Saved as a draft"],
   },
   {
     label: "AI Governance Report",
     request:
       "“Create a landing page for our new AI governance report. Lead with the most important findings, include the strongest customer proof, collect work emails before download, and send me a staging preview.”",
-    result: ["Most important findings first", "Strongest customer proof", "Work emails before download", "Staging preview sent"],
   },
   {
     label: "Homepage Campaign",
     request:
       "“Update the homepage for the security campaign. Replace the hero headline, move customer logos above the product tour, and swap in the Acme quote. Keep navigation and legal copy unchanged.”",
-    result: ["Replace hero headline", "Move customer logos", "Swap customer quote", "Navigation and legal copy unchanged"],
   },
   {
     label: "Event Conversion",
     request:
       "“Keep the current event page as variant A. Create variant B with the new headline and registration CTA, then start a 50/50 PostHog test using completed registrations as the conversion.”",
-    result: ["Variant A — current page", "Variant B — new headline and CTA", "50/50 PostHog test", "Goal — completed registrations"],
   },
 ];
 
@@ -97,11 +92,6 @@ export function SanityExamples() {
                 <div className="flex max-w-lg flex-col gap-6">
                   <p className="text-2xl text-off-white md:text-3xl">{e.label}</p>
                   <p className="text-base leading-6 text-off-white-light">{e.request}</p>
-                  <List>
-                    {e.result.map((r) => (
-                      <ListItem key={r}>{r}</ListItem>
-                    ))}
-                  </List>
                 </div>
               </div>
             </div>

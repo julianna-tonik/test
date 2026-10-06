@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion, type MotionStyle } from "motion/react";
 import { Reveal, SectionLabel } from "./shared";
 
 /**
  * 84px icons in the Vibe Fixer "Why tonik" language (dark base #383838 + one #666 idea),
- * drawn with the page's own vocabulary: grid cells, edge + nodes, dashed = AI, solid = person.
+ * drawn as pages and blocks — the same vocabulary as the hero and the example scenes.
  * Ambient motion: one slow move per icon, staggered so only one icon moves at a time.
  */
 const D = "#383838";
@@ -15,32 +15,20 @@ const N = "#888888";
 const PERIOD = 9; // s, whole cycle across the six icons
 const io = [0.65, 0, 0.35, 1] as const;
 
-const cells = (x: number, y: number, cols: number, rows: number, s = 12) => {
-  let d = "";
-  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) d += `M${x + k * s + 0.5} ${y + r * s + 0.5}h${s}v${s}h${-s}Z`;
-  return d;
-};
-const Nodes = ({ pts }: { pts: [number, number][] }) => (
-  <>
-    {pts.map(([x, y], i) => (
-      <rect key={i} x={x - 1.5} y={y - 1.5} width="3.5" height="3.5" fill="#212121" stroke={N} strokeWidth="0.75" />
-    ))}
-  </>
-);
-const corners = (x: number, y: number, w: number, h: number): [number, number][] => [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
 
 /** One slow move out and back (1.2s each way, 2.2s hold), then rest; icons start a slot apart. */
 const TIMES = [0, 1.2 / PERIOD, 3.4 / PERIOD, 4.6 / PERIOD, 1];
-function Drift({ i, on, to, children }: { i: number; on: boolean; to: Record<string, number>; children: React.ReactNode }) {
+function Drift({ i, on, to, style, children }: { i: number; on: boolean; to: Record<string, number>; style?: MotionStyle; children: React.ReactNode }) {
   const animate: Record<string, number[]> = {};
   const from: Record<string, number> = {};
   for (const [k, v] of Object.entries(to)) {
-    const base = k === "opacity" ? 1 : 0;
+    const base = k === "opacity" || k.startsWith("scale") ? 1 : 0;
     from[k] = base;
     animate[k] = [base, v, v, base, base];
   }
   return (
     <motion.g
+      style={style}
       initial={from}
       animate={on ? animate : from}
       transition={on ? { duration: PERIOD, times: TIMES, ease: io, repeat: Infinity, delay: 0.6 + i * (PERIOD / 6) } : { duration: 0.4 }}
@@ -52,68 +40,80 @@ function Drift({ i, on, to, children }: { i: number; on: boolean; to: Record<str
 
 type IconFn = (on: boolean) => React.ReactNode;
 const icons: IconFn[] = [
-  // Launch campaigns faster — a draft comes out of the system (dashed = drafted by AI)
+  // Launch campaigns faster — a brief (lines) goes into a page and becomes a draft
   (on) => (
     <>
-      <path d={cells(18, 18, 2, 2, 24)} stroke={D} />
-      <Drift i={0} on={on} to={{ x: 6, y: 6 }}>
-        <rect x="42.5" y="42.5" width="24" height="24" stroke={G} strokeDasharray="3 2.5" fill="#212121" />
-        <Nodes pts={corners(42.5, 42.5, 24, 24)} />
+      <rect x="40.5" y="18.5" width="30" height="46" stroke={D} />
+      <rect x="45.5" y="24.5" width="20" height="10" stroke={G} strokeDasharray="2.5 2" />
+      <rect x="45.5" y="39.5" width="20" height="19" stroke={G} strokeDasharray="2.5 2" />
+      <Drift i={0} on={on} to={{ x: 14, opacity: 0 }}>
+        <path d="M12 33H32M12 40H28M12 47H32" stroke={G} />
       </Drift>
     </>
   ),
-  // Adapt for each audience — one page, versions fanned out from it
+  // Adapt campaigns for each audience — one page branches into versions
   (on) => (
     <>
-      <rect x="18.5" y="30.5" width="36" height="36" stroke={D} />
-      <Drift i={1} on={on} to={{ x: 3, y: -3 }}>
-        <rect x="26.5" y="22.5" width="36" height="36" stroke={G} />
-      </Drift>
-      <Drift i={1} on={on} to={{ x: 6, y: -6 }}>
-        <rect x="34.5" y="14.5" width="36" height="36" stroke={G} />
-      </Drift>
-    </>
-  ),
-  // Test more ideas — A and B, a split, one signal travelling between them
-  (on) => (
-    <>
-      <rect x="14.5" y="24.5" width="24" height="36" stroke={D} />
-      <rect x="46.5" y="24.5" width="24" height="36" stroke={D} />
-      <line x1="42.5" y1="16" x2="42.5" y2="68" stroke={G} strokeDasharray="2 2.5" />
-      <Drift i={2} on={on} to={{ x: 32 }}>
-        <rect x="23.5" y="39.5" width="6" height="6" stroke={G} fill="#212121" />
+      <rect x="12.5" y="28.5" width="22" height="28" stroke={D} />
+      <path d="M35 42.5H42M42 20.5V64.5M42 20.5H48M42 42.5H48M42 64.5H48" stroke={D} />
+      <Drift i={1} on={on} to={{ x: 3 }}>
+        <rect x="48.5" y="14.5" width="22" height="13" stroke={G} />
+        <rect x="48.5" y="36.5" width="22" height="13" stroke={G} />
+        <rect x="48.5" y="58.5" width="22" height="13" stroke={G} />
       </Drift>
     </>
   ),
-  // Keep every page on-brand — approved patterns selected on the grid (edge + nodes)
+  // Test more ideas — A and B, measured: B's result grows
   (on) => (
     <>
-      <path d={cells(18, 18, 2, 2, 24)} stroke={D} />
-      <Drift i={3} on={on} to={{ x: 24, y: 24 }}>
-        <rect x="18.5" y="18.5" width="24" height="24" stroke={G} />
-        <Nodes pts={corners(18.5, 18.5, 24, 24)} />
+      <rect x="12.5" y="16.5" width="26" height="34" stroke={D} />
+      <rect x="45.5" y="16.5" width="26" height="34" stroke={D} />
+      <rect x="17.5" y="22.5" width="16" height="6" stroke={G} />
+      <rect x="50.5" y="22.5" width="16" height="10" stroke={G} />
+      <rect x="12.5" y="60.5" width="14" height="4" stroke={G} />
+      <Drift i={2} on={on} to={{ scaleX: 1.35 }} style={{ originX: 0 }}>
+        <rect x="45.5" y="60.5" width="20" height="4" fill={G} />
       </Drift>
     </>
   ),
-  // Reuse your strongest content — one block, copied into a new slot
+  // Keep every page on-brand — every page shares the same approved structure
   (on) => (
     <>
-      <path d={cells(12, 34, 3, 1, 20)} stroke={D} />
-      <rect x="12.5" y="34.5" width="20" height="20" stroke={G} />
-      <rect x="18" y="40" width="9" height="9" fill={G} />
+      {[12, 33, 54].map((x) => (
+        <g key={x}>
+          <rect x={x + 0.5} y="22.5" width="18" height="40" stroke={D} />
+          <rect x={x + 3.5} y="26.5" width="12" height="8" stroke={G} />
+          <rect x={x + 3.5} y="38.5" width="12" height="4" stroke={G} />
+        </g>
+      ))}
+      <Drift i={3} on={on} to={{ opacity: 0 }}>
+        <path d="M8 30.5H76" stroke={N} strokeDasharray="2 2.5" />
+      </Drift>
+    </>
+  ),
+  // Reuse your strongest content — one proven block placed into more pages
+  (on) => (
+    <>
+      <rect x="12.5" y="35.5" width="14" height="14" stroke={G} />
+      <rect x="16" y="39" width="7" height="7" fill={G} />
+      <path d="M27 42.5H34M34 24.5V60.5M34 24.5H42M34 60.5H42" stroke={D} />
+      <rect x="42.5" y="12.5" width="28" height="24" stroke={D} />
+      <rect x="49" y="19" width="7" height="7" fill={G} />
+      <rect x="42.5" y="48.5" width="28" height="24" stroke={D} />
       <Drift i={4} on={on} to={{ opacity: 0.15 }}>
-        <rect x="52.5" y="34.5" width="20" height="20" stroke={G} strokeDasharray="2.5 2" />
-        <rect x="58" y="40" width="9" height="9" fill={G} opacity="0.6" />
+        <rect x="49" y="55" width="7" height="7" fill={G} />
       </Drift>
     </>
   ),
-  // Review and publish with confidence — a person (solid circle) approves
+  // Review and publish with confidence — the page goes live when you switch it
   (on) => (
     <>
-      <rect x="18.5" y="18.5" width="48" height="48" stroke={D} />
-      <circle cx="42" cy="42" r="17.5" stroke={G} />
-      <Drift i={5} on={on} to={{ opacity: 0.2 }}>
-        <path d="M34 42.5L40 48.5L51 36.5" stroke={G} />
+      <rect x="18.5" y="12.5" width="48" height="40" stroke={D} />
+      <rect x="24.5" y="19.5" width="28" height="5" stroke={G} />
+      <rect x="24.5" y="29.5" width="18" height="5" stroke={G} />
+      <rect x="30.5" y="60.5" width="24" height="12" rx="6" stroke={G} />
+      <Drift i={5} on={on} to={{ x: 12 }}>
+        <circle cx="36.5" cy="66.5" r="3.5" fill={N} />
       </Drift>
     </>
   ),
