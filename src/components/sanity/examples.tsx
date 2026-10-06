@@ -72,7 +72,7 @@ export function SanityExamples() {
             >
               {/* Vibe Fixer "What you get" anatomy: illustration full width, text centred below */}
               <div className="flex w-full items-center">
-                <RequestScene index={i} active={active === i} />
+                <RequestScene index={i} active={active === i} scope="d" />
               </div>
               <div className="flex justify-center">
                 <div className="flex max-w-lg flex-col gap-10">

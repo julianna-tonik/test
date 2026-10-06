@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Actor, ActorTag } from "./actor";
+import { IdScope, useScopedId } from "./id-scope";
 
 /**
  * Hero visual: three small product fragments (Ask → Build → Review), drawn as
@@ -72,8 +73,9 @@ export const cellsPath = (x: number, y: number, cols: number, rows: number) => {
   return d;
 };
 
-function Node({ x, y, color = HI }: { x: number; y: number; color?: string }) {
-  return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill={BG} stroke={color} strokeWidth="0.75" />;
+/** Vibe Fixer node: small filled grey square on the selection's corner. */
+function Node({ x, y }: { x: number; y: number; color?: string }) {
+  return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill="#4a4a4a" stroke="#8a8a8a" strokeWidth="0.75" />;
 }
 
 export function EdgeBox({ x, y, w, h, dashed, color = HI, nodes = true }: { x: number; y: number; w: number; h: number; dashed?: boolean; color?: string; nodes?: boolean }) {
@@ -168,6 +170,7 @@ export const CARD_W4 = 50;
 
 function BuildPanel() {
   const d = useDur();
+  const scope = useScopedId("");
   const { y, h } = SLOT.cards;
   return (
     <>
@@ -183,11 +186,11 @@ function BuildPanel() {
       {CARDS3.map((x3, i) => (
         <G key={i} t={{ x: ab(x3, CARDS4[i], 0.4, 1.3, d) }}>
           <defs>
-            <clipPath id={`bc${i}`}>
+            <clipPath id={`${scope}bc${i}`}>
               <R t={{ width: ab(CARD_W3 + 1, CARD_W4 + 1, 0.4, 1.3, d) }} x={0} y={y} height={h + 1} />
             </clipPath>
           </defs>
-          <path d={cellsPath(0, y, 7, 4)} stroke={GRID} fill="none" clipPath={`url(#bc${i})`} />
+          <path d={cellsPath(0, y, 7, 4)} stroke={GRID} fill="none" clipPath={`url(#${scope}bc${i})`} />
           <R t={{ width: ab(CARD_W3, CARD_W4, 0.4, 1.3, d) }} x={0.5} y={y + 0.5} height={h} stroke={GRID} fill="none" />
         </G>
       ))}
@@ -237,8 +240,9 @@ export function SwitchHeader({ t }: { t: number }) {
 }
 
 /** Page frame that lights up once live, plus a slow sweep across the given boxes. */
-export function GoLive({ id, t, boxes }: { id: string; t: number; boxes: [number, number, number, number][] }) {
+export function GoLive({ id: local, t, boxes }: { id: string; t: number; boxes: [number, number, number, number][] }) {
   const d = useDur();
+  const id = useScopedId(local);
   return (
     <>
       <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
@@ -394,12 +398,23 @@ export function ReviewApprove() {
       <DraftBlock x={40} y={110} w={240} h={10} t={2.2} />
 
       {/* cards: the fourth is moved to the front, then the row is approved */}
-      {CARDS4.map((x, i) => (
-        <G key={i} t={{ x: moves[i] }}>
-          <DraftBlock x={x} y={CARD_Y} w={CARD_W4} h={40} t={4.0} />
-          <rect x={x + 6} y={CARD_Y + 8} width="28" height="4" fill={BAR} />
-        </G>
-      ))}
+      {/* every card is opaque; the grabbed one fills, lifts a little and travels above the others */}
+      {CARDS4.map((x, i) => {
+        const grab = i === 3;
+        const held: Track = [[0, 0], [2.85, 0], [2.95, 1], [3.55, 1], [3.7, 0], [d, 0]];
+        return (
+          <G key={i} t={grab ? { x: moves[i], y: [[0, 0], [2.85, 0], [2.95, -4], [3.55, -4], [3.7, 0], [d, 0]] } : { x: moves[i] }}>
+            <rect x={x + 0.5} y={CARD_Y + 0.5} width={CARD_W4} height={40} fill={BG} />
+            {grab && (
+              <G t={{ opacity: held }}>
+                <rect x={x + 0.5} y={CARD_Y + 0.5} width={CARD_W4} height={40} fill="#2c2c2c" stroke={EDGE} />
+              </G>
+            )}
+            <DraftBlock x={x} y={CARD_Y} w={CARD_W4} h={40} t={4.0} />
+            <rect x={x + 6} y={CARD_Y + 8} width="28" height="4" fill={BAR} />
+          </G>
+        );
+      })}
 
       {/* cta */}
       <DraftBlock x={40} y={184} w={240} h={30} t={4.75} />
@@ -446,11 +461,13 @@ export function ProductFragments() {
         return (
           <Step key={i} index={idx} phase={reduce ? 3 : phase} cycle={cycle}>
             <div className={cn("relative aspect-[4/3] w-full border bg-[#1c1c1c] transition-colors duration-700", !reduce && phase === idx ? "border-[#4a4a4a]" : "border-dark-grey")}>
+              <IdScope.Provider value={`d${idx}-`}>
               <PanelCtx.Provider value={{ mode, dur: PHASE_S[idx] }}>
                 <svg aria-hidden viewBox="0 0 320 240" fill="none" className={cn("absolute inset-0 h-full w-full transition-opacity duration-700", mode === "play" || reduce ? "opacity-100" : "opacity-45")}>
                   <Panel />
                 </svg>
               </PanelCtx.Provider>
+              </IdScope.Provider>
             </div>
           </Step>
         );

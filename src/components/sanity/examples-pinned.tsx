@@ -56,13 +56,13 @@ export function ExamplesPinned({ aspect = () => 204 / 480 }: { aspect?: (i: numb
             <span className="text-off-white">{num(i)}</span> / {num(examples.length - 1)}
           </p>
         </div>
-        <motion.div ref={boxRef} className="relative w-full" style={{ aspectRatio: height ? undefined : `1 / ${aspect(0)}` }} initial={false} animate={height ? { height } : undefined} transition={{ duration: 0.5, ease }}>
+        <div ref={boxRef} className="relative w-full transition-[height] duration-500 ease-in-out" style={height ? { height } : { aspectRatio: `1 / ${aspect(0)}` }}>
           {examples.map((e, k) => (
             <motion.div key={e.label} className="absolute inset-0" initial={false} animate={{ opacity: k === i ? 1 : 0 }} transition={{ duration: 0.5, ease }}>
-              <RequestScene index={k} active={k === i} fit />
+              <RequestScene index={k} active={k === i} fit scope="p" />
             </motion.div>
           ))}
-        </motion.div>
+        </div>
         {/* text scrolling up fades out under the pinned block instead of being cut */}
         <div className="pointer-events-none absolute inset-x-0 top-full h-20 bg-gradient-to-b from-off-black to-transparent" />
       </div>

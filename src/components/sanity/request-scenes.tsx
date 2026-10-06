@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { easeOut } from "./shared";
+import { IdScope, useScopedId } from "./id-scope";
 
 /**
  * Example-request illustrations in the Vibe Fixer video language:
@@ -21,7 +22,7 @@ const GRID = "#424242";
 const CHANGED_CELL = "#5a5a5a";
 const CHANGED_EDGE = "#9a9a9a";
 const SEL = "#dcdcdc";
-const NODE_FILL = "#2a2a2a";
+const NODE_FILL = "#4a4a4a";
 const MUTED = "#888";
 const io = [0.65, 0, 0.35, 1] as const;
 
@@ -85,7 +86,7 @@ function Cells({ x, y, cols, rows, stroke = GRID }: { x: number; y: number; cols
 
 /** Small square node, as on the Vibe Fixer selections. */
 function Node({ x, y }: { x: number; y: number }) {
-  return <rect x={x - 2} y={y - 2} width="5" height="5" fill={NODE_FILL} stroke={SEL} strokeWidth="0.75" />;
+  return <rect x={x - 2} y={y - 2} width="5" height="5" fill={NODE_FILL} stroke="#8a8a8a" strokeWidth="0.75" />;
 }
 
 /** Highlight running on the block's own outer edge, with nodes on corners (and mid-edges on wide blocks). */
@@ -113,7 +114,8 @@ function Changed({ x, y, cols, rows, t }: { x: number; y: number; cols: number; 
 }
 
 /** Light sweep across the finished result — the VC-1 glow. */
-function Glint({ id, boxes, at = 5 }: { id: string; boxes: Box[]; at?: number }) {
+function Glint({ id: local, boxes, at = 5 }: { id: string; boxes: Box[]; at?: number }) {
+  const id = useScopedId(local);
   return (
     <>
       <defs>
@@ -205,6 +207,10 @@ function SceneReport() {
       </G>
       <G t={{ y: ev(0, -44, 1.2, 2) }}>
         <Cells x={X} y={100} cols={W} rows={3} />
+        <G t={{ opacity: pulse(1.1, 1.9) }}>
+          <rect x={X + 0.5} y={100.5} width={W * C} height={3 * C} fill="#2c2c2c" />
+          <path d={cellsPath(X, 100, W, 3)} stroke="#555" strokeWidth="1" fill="none" />
+        </G>
         <Changed x={X} y={100} cols={W} rows={3} t={show(2)} />
         <Edge x={X} y={100} cols={W} rows={3} dashed t={pulse(0.6, 2.0)} />
       </G>
@@ -327,12 +333,13 @@ function SceneHomepage() {
 const SPLIT = [0.5, 1.3] as const;
 
 /** Constant visitor stream: half goes to A, half to B; some convert on the CTA. */
-const VISITORS = Array.from({ length: 5 }).map((_, j) => {
+// eight visitors, split 50/50: three of B's four convert, one of A's
+const VISITORS = Array.from({ length: 8 }).map((_, j) => {
   const toB = j % 2 === 1;
-  const converts = toB ? [1, 3].includes(j) : [0].includes(j);
-  return { s: 1.6 + j * 0.6, toB, converts };
+  const converts = toB ? [1, 3, 7].includes(j) : [2].includes(j);
+  return { s: 1.6 + j * 0.4, toB, converts };
 });
-const TRAVEL = { down: 1.1, across: 0.9 };
+const TRAVEL = { down: 0.95, across: 0.75 };
 const METER = 8;
 
 function Page({ variant }: { variant: "A" | "B" }) {
@@ -342,7 +349,16 @@ function Page({ variant }: { variant: "A" | "B" }) {
     <>
       <Cells x={0} y={6} cols={14} rows={1} />
       <Cells x={0} y={26} cols={14} rows={3} />
-      <Cells x={0} y={70} cols={14} rows={4} />
+      {b ? (
+        <>
+          {/* B is laid out differently: two blocks, then three */}
+          <Cells x={0} y={62} cols={6} rows={2} />
+          <Cells x={7 * C} y={62} cols={7} rows={2} />
+          {[0, 5, 10].map((k) => <Cells key={k} x={k * C} y={88} cols={4} rows={3} />)}
+        </>
+      ) : (
+        <Cells x={0} y={70} cols={14} rows={4} />
+      )}
       <Cells x={0} y={126} cols={5} rows={1} />
       <Cells x={0} y={146} cols={14} rows={1} />
       {b && (
@@ -412,15 +428,17 @@ function SceneAB() {
 
 const SCENES = [SceneEvent, SceneReport, SceneHomepage, SceneAB];
 
-export function RequestScene({ index, active, snapshot, fit }: { index: number; active: boolean; snapshot?: boolean; fit?: boolean }) {
+export function RequestScene({ index, active, snapshot, fit, scope = "" }: { index: number; active: boolean; snapshot?: boolean; fit?: boolean; scope?: string }) {
   const reduce = !!useReducedMotion() || !!snapshot;
   const Scene = SCENES[index];
   return (
+    <IdScope.Provider value={`${scope}s${index}-`}>
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
       <svg aria-hidden viewBox="0 0 480 204" fill="none" className={fit ? "absolute inset-0 h-full w-full overflow-visible" : "block h-auto w-full overflow-visible"}>
         <Scene />
       </svg>
     </Ctx.Provider>
+    </IdScope.Provider>
   );
 }
 

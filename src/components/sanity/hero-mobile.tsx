@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { ActorTag } from "./actor";
+import { IdScope } from "./id-scope";
 import { PANELS, PHASE_S, PanelCtx, STEPS, type Mode } from "./product-fragments";
 
 /**
@@ -34,15 +35,17 @@ function useHeroLoop(inView: boolean) {
 
 const modeOf = (idx: number, phase: number, reduce: boolean): Mode => (reduce || phase > idx ? "after" : phase === idx ? "play" : "before");
 
-function Panel({ idx, mode, dim = true }: { idx: number; mode: Mode; dim?: boolean }) {
+function Panel({ idx, mode, dim = true, scope }: { idx: number; mode: Mode; dim?: boolean; scope: string }) {
   const P = PANELS[idx];
   return (
     <div className={cn("relative aspect-[4/3] w-full border bg-[#1c1c1c] transition-colors duration-700", mode === "play" ? "border-[#4a4a4a]" : "border-dark-grey")}>
+      <IdScope.Provider value={`${scope}${idx}-`}>
       <PanelCtx.Provider value={{ mode, dur: PHASE_S[idx as Phase] }}>
         <svg aria-hidden viewBox="0 0 320 240" fill="none" className={cn("absolute inset-0 h-full w-full transition-opacity duration-700", !dim || mode === "play" ? "opacity-100" : "opacity-45")}>
           <P />
         </svg>
       </PanelCtx.Provider>
+      </IdScope.Provider>
     </div>
   );
 }
@@ -95,7 +98,7 @@ export function HeroTabs() {
       <div className="relative">
         <AnimatePresence initial={false} mode="popLayout">
           <motion.div key={`${phase}-${cycle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5, ease }}>
-            <Panel idx={phase} mode={modeOf(phase, phase, reduce)} dim={false} />
+            <Panel idx={phase} mode={modeOf(phase, phase, reduce)} dim={false} scope="ht" />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -109,24 +112,48 @@ export function HeroTabs() {
 
 /* ── B · Slide: one frame, panels slide right → left; swipe to move; segmented progress ── */
 
+const SLIDE_GAP = 16;
+
 export function HeroSlide() {
   const ref = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
   const { phase, cycle, go, reduce } = useHeroLoop(useInView(ref, { margin: "-10% 0px" }));
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setW(el.offsetWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // always slides forward: after 03 it moves on to a copy of 01, then jumps back to the real 01 unseen
+  const [prev, setPrev] = useState(phase);
+  const [wrap, setWrap] = useState(false);
+  const [jump, setJump] = useState(false);
+  if (phase !== prev) {
+    setPrev(phase);
+    setWrap(prev === 2 && phase === 0);
+    setJump(false);
+  }
+  const pos = wrap ? 3 : phase;
+  const onDone = () => { if (wrap) { setJump(true); setWrap(false); } };
   return (
     <div ref={ref} className="flex w-full flex-col gap-5">
-      <div className="overflow-hidden">
+      <div ref={frame} className="overflow-hidden">
         <motion.div
           className="flex touch-pan-y"
-          animate={{ x: `${-phase * 100}%` }}
-          transition={{ duration: 0.8, ease }}
+          style={{ gap: SLIDE_GAP }}
+          animate={{ x: -pos * (w + SLIDE_GAP) }}
+          transition={jump ? { duration: 0 } : { duration: 0.8, ease }}
+          onAnimationComplete={onDone}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.25}
           onDragEnd={(_, info) => { if (info.offset.x < -40) go(phase + 1); else if (info.offset.x > 40) go(phase - 1); }}
         >
-          {PANELS.map((_, i) => (
-            <div key={i} className="w-full shrink-0">
-              <Panel idx={i} mode={modeOf(i, phase, reduce)} dim={false} />
+          {[0, 1, 2, 0].map((idx, i) => (
+            <div key={i} className="w-full shrink-0" aria-hidden={i === 3 || undefined}>
+              <Panel idx={idx} mode={modeOf(idx, phase, reduce)} dim={false} scope={i === 3 ? "hsc" : "hs"} />
             </div>
           ))}
         </motion.div>
@@ -183,7 +210,7 @@ export function HeroPeek() {
       >
         {PANELS.map((_, i) => (
           <div key={i} className="flex w-[85%] shrink-0 snap-start flex-col gap-5">
-            <Panel idx={i} mode={modeOf(i, phase, reduce)} />
+            <Panel idx={i} mode={modeOf(i, phase, reduce)} scope="hp" />
             <Progress state={stateOf(i, phase)} idx={i} k={`${cycle}-${i}-${i === phase}`} />
             <div className={cn("transition-opacity duration-500", i === phase ? "opacity-100" : "opacity-50")}>
               <Caption idx={i} />

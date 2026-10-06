@@ -95,7 +95,7 @@ function Scene({ index }: { index: number }) {
   const inView = useInView(ref, { margin: "-25% 0px" });
   return (
     <div ref={ref} className="w-full">
-      <RequestScene index={index} active={inView} />
+      <RequestScene index={index} active={inView} scope="c" />
     </div>
   );
 }
@@ -129,7 +129,7 @@ export function ExamplesSwipe() {
         {examples.map((e, k) => (
           <div key={e.label} className="flex w-[86%] shrink-0 snap-start flex-col gap-6">
             <div className="w-full border border-dark-grey p-4">
-              <RequestScene index={k} active={k === i} />
+              <RequestScene index={k} active={k === i} scope="w" />
             </div>
             <div className="flex flex-col gap-3">
               <p className="font-mono text-sm uppercase leading-none tracking-tight text-off-white-light">{num(k)}</p>
@@ -170,7 +170,7 @@ export function ExamplesTabs() {
       </div>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease }} className="flex flex-col gap-6">
-          <RequestScene index={i} active={inView} />
+          <RequestScene index={i} active={inView} scope="t" />
           <div className="flex flex-col gap-3">
             <p className="text-2xl text-off-white">{e.label}</p>
             <p className="text-base leading-6 text-off-white-light">{e.request}</p>
