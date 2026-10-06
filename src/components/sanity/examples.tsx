@@ -5,7 +5,7 @@ import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { List, ListItem } from "@/components/ui/list-item";
 import { cn } from "@/lib/utils";
 import { ScrollText, SectionLabel } from "./shared";
-import { SquaresIllustration } from "./squares";
+import { RequestScene } from "./request-scenes";
 
 const examples = [
   {
@@ -13,41 +13,24 @@ const examples = [
     request:
       "“We're hosting the NYC Security Summit for enterprise security teams. Create the event page, feature this year's speakers and our strongest security customer proof, and save it as a draft.”",
     result: ["Event page from the existing template", "This year's speakers", "Strongest security customer proof", "Saved as a draft"],
-    loose: true,
   },
   {
     label: "AI Governance Report",
     request:
       "“Create a landing page for our new AI governance report. Lead with the most important findings, include the strongest customer proof, collect work emails before download, and send me a staging preview.”",
     result: ["Most important findings first", "Strongest customer proof", "Work emails before download", "Staging preview sent"],
-    loose: true,
   },
   {
     label: "Homepage Campaign",
     request:
       "“Update the homepage for the security campaign. Replace the hero headline, move customer logos above the product tour, and swap in the Acme quote. Keep navigation and legal copy unchanged.”",
     result: ["Replace hero headline", "Move customer logos", "Swap customer quote", "Navigation and legal copy unchanged"],
-    extra: (
-      <g fill="#2d2d2d" stroke="#555">
-        <rect x="8.5" y="24.5" width="80" height="12" />
-        <rect x="8.5" y="44.5" width="80" height="12" />
-        <rect x="8.5" y="64.5" width="56" height="12" />
-      </g>
-    ),
   },
   {
     label: "Event Conversion",
     request:
       "“Keep the current event page as variant A. Create variant B with the new headline and registration CTA, then start a 50/50 PostHog test using completed registrations as the conversion.”",
     result: ["Variant A — current page", "Variant B — new headline and CTA", "50/50 PostHog test", "Goal — completed registrations"],
-    extra: (
-      <g style={{ fontFamily: "var(--font-mono)" }} fontSize="11">
-        <line x1="240.5" y1="0" x2="240.5" y2="190" stroke="#383838" strokeDasharray="2 4" />
-        <text x="24" y="200" fill="#888">A</text>
-        <text x="300" y="200" fill="#efefef">B</text>
-        <text x="222" y="200" fill="#555">50/50</text>
-      </g>
-    ),
   },
 ];
 
@@ -107,7 +90,7 @@ export function SanityExamples() {
               className={cn("grid grid-cols-1 items-center gap-10 transition-opacity duration-700 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12", active === i || active === -1 && i === 0 ? "opacity-100" : "opacity-40")}
             >
               <div className="flex items-center">
-                <SquaresIllustration index={i} active={active === i} loose={e.loose} extra={e.extra} />
+                <RequestScene index={i} active={active === i} />
               </div>
               <div className="flex flex-col gap-6">
                 <p className="text-2xl text-off-white md:text-3xl">{e.label}</p>
