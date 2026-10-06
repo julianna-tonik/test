@@ -21,7 +21,7 @@ const groups = [
     variants: [
       { k: "E1", name: "Kompakt", note: "Ta sama kolejność co na desktopie, ale ciaśniej: numer i nazwa, ilustracja, a tekst zaraz pod nią (bez dużej przerwy i bez przygaszania).", C: ExamplesCompact },
       { k: "E2", name: "Przesuwanie", note: "Cztery przykłady jako karty obok siebie; animacja gra na karcie, która jest na ekranie. Cała sekcja zajmuje jeden ekran.", C: ExamplesSwipe },
-      { k: "E4", name: "Przypięty", note: "Twój pomysł: nazwa przykładu z licznikiem 01 / 04 i ilustracja są przypięte u góry i zmieniają się, a pod nimi przewijają się tylko nagłówki i opisy. Krótsza sekcja i jedna ilustracja naraz.", C: ExamplesPinned },
+      { k: "E4", name: "Przypięty", note: "Twój pomysł: u góry przypięty pasek czterech kroków z licznikiem 01 / 04, pod nim ilustracja, która się zmienia. Przewijają się tylko nagłówki i opisy, blisko siebie.", C: ExamplesPinned },
       { k: "E3", name: "Zakładki", note: "Cztery numerowane zakładki z linią postępu; jedna ilustracja i jeden opis naraz, przełącza się samo co 7 s albo po tapnięciu.", C: ExamplesTabs },
     ],
   },

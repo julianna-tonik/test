@@ -181,16 +181,20 @@ export function ExamplesTabs() {
   );
 }
 
-/** E4 · Pinned: the label ("01 / 04"), and the illustration stay pinned and change; only the titles and requests scroll. */
+/** E4 · Pinned: progress + counter ("01 / 04") and the illustration stay pinned and change; only the titles and requests scroll. */
 export function ExamplesPinned() {
   const [i, setI] = useState(0);
   const items = useRef<(HTMLDivElement | null)[]>([]);
-  // the active example is the last one whose title has reached the lower quarter of the viewport
+  const pin = useRef<HTMLDivElement>(null);
+  // the active example is the last one whose title has come up close under the pinned illustration
   useEffect(() => {
     const on = () => {
-      const line = window.innerHeight * 0.75;
+      const line = (pin.current?.getBoundingClientRect().bottom ?? 0) + 140;
       let a = 0;
       items.current.forEach((el, k) => { if (el && el.getBoundingClientRect().top < line) a = k; });
+      // the last one can't climb that far: activate it once the whole list has scrolled into view
+      const last = items.current[items.current.length - 1];
+      if (last && last.getBoundingClientRect().bottom < window.innerHeight - 40) a = items.current.length - 1;
       setI(a);
     };
     on();
@@ -200,16 +204,13 @@ export function ExamplesPinned() {
   }, []);
   return (
     <div className="relative">
-      <div className="sticky top-16 z-10 flex flex-col gap-4 bg-off-black pb-6 pt-4">
-        <div className="flex items-center justify-between gap-4 font-mono text-sm uppercase leading-none tracking-tight">
-          <div className="relative h-[14px] flex-1 overflow-hidden">
-            <AnimatePresence initial={false}>
-              <motion.p key={i} className="absolute inset-0 truncate text-off-white" initial={{ y: "100%" }} animate={{ y: "0%" }} exit={{ y: "-100%" }} transition={{ duration: 0.45, ease }}>
-                {examples[i].label}
-              </motion.p>
-            </AnimatePresence>
+      <div ref={pin} className="sticky top-16 z-10 flex flex-col gap-5 bg-off-black pb-6 pt-4">
+        {/* four steps + counter on top, the illustration below */}
+        <div className="flex items-center gap-4">
+          <div className="flex flex-1 gap-2">
+            {examples.map((e, k) => <div key={e.label} className={cn("h-px flex-1 transition-colors duration-500", k <= i ? "bg-off-white" : "bg-dark-grey")} />)}
           </div>
-          <p className="shrink-0 text-off-white-light">
+          <p className="shrink-0 font-mono text-sm uppercase leading-none tracking-tight text-off-white-light">
             <span className="text-off-white">{num(i)}</span> / {num(examples.length - 1)}
           </p>
         </div>
@@ -220,16 +221,13 @@ export function ExamplesPinned() {
             </motion.div>
           ))}
         </div>
-        <div className="flex gap-2">
-          {examples.map((e, k) => <div key={e.label} className={cn("h-px flex-1 transition-colors duration-500", k <= i ? "bg-off-white" : "bg-dark-grey")} />)}
-        </div>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-16 pt-4">
         {examples.map((e, k) => (
           <div
             key={e.label}
             ref={(el) => { items.current[k] = el; }}
-            className={cn("flex flex-col gap-3 pt-4 transition-opacity duration-500", k === examples.length - 1 ? "min-h-[40vh]" : "min-h-[60vh]", k === i ? "opacity-100" : "opacity-30")}
+            className={cn("flex flex-col gap-3 transition-opacity duration-500", k === i ? "opacity-100" : "opacity-30")}
           >
             <p className="text-2xl text-off-white">{e.label}</p>
             <p className="text-base leading-6 text-off-white-light">{e.request}</p>
