@@ -61,7 +61,7 @@ export function WhereIcon({ i }: { i: number }) {
   const inView = useInView(ref, { margin: "-15% 0px" });
   const reduce = useReducedMotion();
   return (
-    <svg aria-hidden ref={ref} viewBox="0 0 84 84" fill="none" className="aspect-square h-auto w-[62%] max-w-[180px]">
+    <svg aria-hidden ref={ref} viewBox="0 0 84 84" fill="none" className="aspect-square h-auto w-full md:w-[62%] md:max-w-[180px]">
       {icons[i](inView && !reduce)}
     </svg>
   );
