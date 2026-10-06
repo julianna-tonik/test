@@ -126,10 +126,6 @@ export function SanityHowItWorks() {
         <p className="font-mono text-sm uppercase leading-none tracking-tight text-off-white-light">
           {"/*"} Sanity stays the source of truth. Your existing rules stay in place. {"*/"}
         </p>
-        <span className="flex items-center gap-6 text-off-white-light">
-          <ActorTag actor="human" label="Person" />
-          <ActorTag actor="ai" label="AI" />
-        </span>
       </Reveal>
     </section>
   );
