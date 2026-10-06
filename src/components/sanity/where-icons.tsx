@@ -8,7 +8,7 @@ import { Drift } from "./what-changes";
 const D = "#383838";
 const G = "#666666";
 
-const icons: ((on: boolean) => React.ReactNode)[] = [
+export const icons: ((on: boolean) => React.ReactNode)[] = [
   // Create pages from familiar tools — a message becomes a page
   (on) => (
     <>
