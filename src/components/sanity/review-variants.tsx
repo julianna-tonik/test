@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
-  ab, BG, C, CARD_W4, CARDS4, cellsPath, Cursor, EDGE, EdgeBox, G, GRID, Header, HI, MID, PanelCtx, R, SOFT, type Track, useDur,
+  ab, BG, C, CARD_W4, CARDS4, cellsPath, EDGE, EdgeBox, G, GoLive, MID, heroNoise, PanelCtx, Person, R, SwitchHeader, useDur,
 } from "./product-fragments";
+
+export { ReviewGrid } from "./product-fragments";
+
+const HERO_NOISE_D = heroNoise(7.6);
 
 /**
  * Three directions for hero panel 03 (Review). Same story in each — a person rewrites the
@@ -15,63 +19,6 @@ const BAR = "#5a5a5a";
 const leftGrow = { transformBox: "fill-box" as const, originX: 0, originY: 0.5 };
 const CARD_Y = 132;
 const SLOT_STEP = CARDS4[1] - CARDS4[0];
-
-/* ── shared pieces ── */
-
-/** Draft → live switch in the header; flips at t. */
-function SwitchHeader({ t }: { t: number }) {
-  const d = useDur();
-  return (
-    <Header>
-      <rect x="10" y="15" width="64" height="3" fill="#444" />
-      <G t={{ opacity: ab(1, 0, t + 0.05, t + 0.25, d) }}>
-        <text x="271" y="19.5" textAnchor="end" fill={MID} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>DRAFT</text>
-      </G>
-      <G t={{ opacity: ab(0, 1, t + 0.15, t + 0.45, d) }}>
-        <text x="271" y="19.5" textAnchor="end" fill={HI} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>LIVE</text>
-      </G>
-      <rect x="278.5" y="10.5" width="31" height="12" rx="6" stroke={SOFT} fill="none" />
-      <R t={{ opacity: ab(0, 1, t, t + 0.4, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
-      <G t={{ x: ab(0, 18, t, t + 0.4, d) }}>
-        <circle cx="285" cy="16.5" r="4" fill={MID} />
-      </G>
-      <G t={{ x: ab(0, 18, t, t + 0.4, d), opacity: ab(0, 1, t + 0.15, t + 0.4, d) }}>
-        <circle cx="285" cy="16.5" r="4" fill={HI} />
-      </G>
-    </Header>
-  );
-}
-
-/** Page frame that lights up once live, plus a slow sweep across the given boxes. */
-function GoLive({ id, t, boxes }: { id: string; t: number; boxes: [number, number, number, number][] }) {
-  const d = useDur();
-  return (
-    <>
-      <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
-      <defs>
-        <linearGradient id={`vg${id}`}>
-          <stop offset="0" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#fff" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-        <mask id={`vm${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="240">
-          <R t={{ x: ab(-160, 340, t, t + 1.2, d) }} y={40} width={160} height={200} fill={`url(#vg${id})`} />
-        </mask>
-      </defs>
-      <g mask={`url(#vm${id})`} stroke="#bdbdbd" fill="none">
-        {boxes.map(([x, y, w, h], i) => <rect key={i} x={x + 0.5} y={y + 0.5} width={w} height={h} />)}
-      </g>
-    </>
-  );
-}
-
-function Person({ t }: { t: Record<string, Track> }) {
-  return (
-    <G t={t}>
-      <Cursor />
-    </G>
-  );
-}
 
 /** Card row where card 4 is dragged to the front and the others make room. */
 function useCardMoves(t0: number, t1: number) {
@@ -128,87 +75,6 @@ export function ReviewText() {
         t={{
           x: [[0, 300], [0.4, 300], [1.1, 120], [2.3, 120], [2.85, 255], [3.0, 255], [3.8, 65], [4.0, 65], [4.8, 290], [d, 290]],
           y: [[0, 236], [0.4, 236], [1.1, 60], [2.3, 60], [2.85, 150], [4.0, 150], [4.8, 18], [d, 18]],
-          opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.5, 1], [5.9, 0], [d, 0]],
-          scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.8, 1], [4.87, 0.82], [4.97, 1], [d, 1]],
-        }}
-      />
-    </>
-  );
-}
-
-/* ── B · GRID: the page stays in squares, like panel 02 and Vibe Fixer ── */
-
-function rng(seed: number) {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-/** Hero data noise; `end` must equal the panel's loop length so keyframe times stay within 0–1. */
-const heroNoise = (end: number) => {
-  const r = rng(5);
-  const out: { k: number; row: number; fill: string; t: Track }[] = [];
-  for (let row = 0; row < 5; row++)
-    for (let k = 0; k < 24; k++) {
-      const g = Math.round(48 + r() * 110);
-      const peak = 0.3 + r() * 0.6;
-      const a = 1.35 + r() * 0.2, b = 2.1 + (k / 24) * 0.35 + r() * 0.1;
-      out.push({ k, row, fill: `rgb(${g},${g},${g})`, t: [[0, 0], [a, 0], [a + 0.15, peak], [a + 0.45, peak * 0.4], [b, peak * 0.7], [b + 0.2, 0], [end, 0]] });
-    }
-  return out;
-};
-const HERO_NOISE_B = heroNoise(7.2);
-const HERO_NOISE_D = heroNoise(7.6);
-
-export function ReviewGrid() {
-  const d = useDur();
-  return (
-    <>
-      <SwitchHeader t={4.9} />
-
-      {/* hero: rewritten — data noise, then the new cells settle */}
-      <path d={cellsPath(40, 48, 24, 5)} stroke={GRID} fill="none" />
-      {HERO_NOISE_B.map((n, i) => (
-        <R key={i} t={{ opacity: n.t }} x={40 + n.k * C + 1} y={48 + n.row * C + 1} width={C - 1} height={C - 1} fill={n.fill} />
-      ))}
-      <G t={{ opacity: ab(0, 1, 2.3, 2.6, d) }}>
-        <path d={cellsPath(40, 48, 24, 5)} stroke="#5f5f5f" fill="none" />
-      </G>
-      <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.5, 1], [2.7, 0], [d, 0]] }}>
-        <EdgeBox x={40} y={48} w={240} h={50} />
-      </G>
-
-      {/* cards move up as the logo row is dragged below them */}
-      <G t={{ y: ab(0, -22, 3.0, 3.8, d) }}>
-        {CARDS4.map((x) => (
-          <path key={x} d={cellsPath(0, CARD_Y, 5, 4)} transform={`translate(${x} 0)`} stroke={GRID} fill="none" />
-        ))}
-      </G>
-      <G t={{ y: ab(0, 52, 3.0, 3.8, d) }}>
-        <rect x="40.5" y="110.5" width="240" height="10" fill={BG} />
-        <path d={cellsPath(40, 110, 24, 1)} stroke={GRID} fill="none" />
-        <G t={{ opacity: [[0, 0], [2.85, 0], [2.95, 1], [3.9, 1], [4.1, 0], [d, 0]] }}>
-          <EdgeBox x={40} y={110} w={240} h={10} />
-        </G>
-      </G>
-      <path d={cellsPath(40, 184, 24, 3)} stroke={GRID} fill="none" />
-
-      {/* live: every cell lifts a step */}
-      <G t={{ opacity: ab(0, 1, 5.3, 5.8, d) }}>
-        <path
-          d={cellsPath(40, 48, 24, 5) + CARDS4.map((x) => cellsPath(x, 110, 5, 4)).join("") + cellsPath(40, 162, 24, 1) + cellsPath(40, 184, 24, 3)}
-          stroke="#555"
-          fill="none"
-        />
-      </G>
-      <GoLive id="b" t={5.3} boxes={[[40, 48, 240, 50], ...CARDS4.map((x): [number, number, number, number] => [x, 110, CARD_W4, 40]), [40, 162, 240, 10], [40, 184, 240, 30]]} />
-
-      <Person
-        t={{
-          x: [[0, 300], [0.4, 300], [1.1, 150], [2.4, 150], [2.85, 170], [3.8, 170], [4.8, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.1, 72], [2.4, 72], [2.85, 116], [3.0, 116], [3.8, 168], [4.8, 18], [d, 18]],
           opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.5, 1], [5.9, 0], [d, 0]],
           scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.8, 1], [4.87, 0.82], [4.97, 1], [d, 1]],
         }}

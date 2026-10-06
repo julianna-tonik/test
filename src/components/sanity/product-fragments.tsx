@@ -12,7 +12,7 @@ import { Actor, ActorTag } from "./actor";
  */
 
 type Phase = 0 | 1 | 2;
-const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
+const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 7.2 };
 
 const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
@@ -206,107 +206,148 @@ function BuildPanel() {
   );
 }
 
-/* ── 03 REVIEW: a person edits the headline, reorders a section, then switches the page live ── */
+/* ── 03 REVIEW (variant B · grid): a person rewrites the hero, drags a row, switches the page live ── */
 
-const BAR = "#5a5a5a";
-const BLOCK = { fill: "#252525", stroke: "#333" };
-const leftGrow = { transformBox: "fill-box" as const, originX: 0, originY: 0.5 };
+const CARD_Y = 132;
 
-function ReviewPanel() {
+
+
+/** Draft → live switch in the header; flips at t. */
+export function SwitchHeader({ t }: { t: number }) {
   const d = useDur();
-  const id = "review";
+  return (
+    <Header>
+      <rect x="10" y="15" width="64" height="3" fill="#444" />
+      <G t={{ opacity: ab(1, 0, t + 0.05, t + 0.25, d) }}>
+        <text x="271" y="19.5" textAnchor="end" fill={MID} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>DRAFT</text>
+      </G>
+      <G t={{ opacity: ab(0, 1, t + 0.15, t + 0.45, d) }}>
+        <text x="271" y="19.5" textAnchor="end" fill={HI} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>LIVE</text>
+      </G>
+      <rect x="278.5" y="10.5" width="31" height="12" rx="6" stroke={SOFT} fill="none" />
+      <R t={{ opacity: ab(0, 1, t, t + 0.4, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
+      <G t={{ x: ab(0, 18, t, t + 0.4, d) }}>
+        <circle cx="285" cy="16.5" r="4" fill={MID} />
+      </G>
+      <G t={{ x: ab(0, 18, t, t + 0.4, d), opacity: ab(0, 1, t + 0.15, t + 0.4, d) }}>
+        <circle cx="285" cy="16.5" r="4" fill={HI} />
+      </G>
+    </Header>
+  );
+}
+
+/** Page frame that lights up once live, plus a slow sweep across the given boxes. */
+export function GoLive({ id, t, boxes }: { id: string; t: number; boxes: [number, number, number, number][] }) {
+  const d = useDur();
   return (
     <>
-      <Header>
-        {/* page address, as a placeholder line */}
-        <rect x="10" y="15" width="64" height="3" fill="#444" />
-        {/* draft → live switch: a state, not a button */}
-        <G t={{ opacity: ab(1, 0, 4.85, 5.05, d) }}>
-          <text x="271" y="19.5" textAnchor="end" fill={MID} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>DRAFT</text>
-        </G>
-        <G t={{ opacity: ab(0, 1, 4.95, 5.25, d) }}>
-          <text x="271" y="19.5" textAnchor="end" fill={HI} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>LIVE</text>
-        </G>
-        <rect x="278.5" y="10.5" width="31" height="12" rx="6" stroke={SOFT} fill="none" />
-        <R t={{ opacity: ab(0, 1, 4.8, 5.2, d) }} x={279} y={11} width={30} height={11} rx={5.5} fill="#3a3a3a" />
-        <G t={{ x: ab(0, 18, 4.8, 5.2, d) }}>
-          <circle cx="285" cy="16.5" r="4" fill={MID} />
-        </G>
-        <G t={{ x: ab(0, 18, 4.8, 5.2, d), opacity: ab(0, 1, 4.95, 5.2, d) }}>
-          <circle cx="285" cy="16.5" r="4" fill={HI} />
-        </G>
-      </Header>
-
-      {/* page frame: dim while draft, lit once live (stays lit) */}
-      <R t={{ stroke: ab("#2e2e2e", EDGE, 5.2, 5.7, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
-
-      {/* hero — a two-line headline gets rewritten, the paragraph stays */}
-      <rect x="40.5" y="48.5" width="240" height="50" {...BLOCK} />
-      <R t={{ scaleX: [[0, 1], [1.3, 1], [1.45, 0], [1.85, 0.82], [d, 0.82]] }} linear={["scaleX"]} x={50} y={56} width={160} height={5} fill={BAR} style={leftGrow} />
-      <R t={{ scaleX: [[0, 1], [1.3, 1], [1.45, 0], [1.85, 0], [2.15, 1.2], [d, 1.2]] }} linear={["scaleX"]} x={50} y={65} width={90} height={5} fill={BAR} style={leftGrow} />
-      {[0, 1, 2].map((j) => <rect key={j} x="50" y={78 + j * 5} width={[170, 156, 118][j]} height="2" fill={BAR} />)}
-      <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.3, 1], [2.5, 0], [d, 0]] }}>
-        <EdgeBox x={46} y={52} w={170} h={22} />
-      </G>
-
-      {/* cards move up as the logo row is dragged below them */}
-      <G t={{ y: ab(0, -22, 2.9, 3.7, d) }}>
-        {CARDS4.map((x) => (
-          <g key={x}>
-            <rect x={x + 0.5} y="132.5" width={CARD_W4} height="40" {...BLOCK} />
-            <rect x={x + 6} y="140" width="30" height="3" fill={BAR} />
-            {[0, 1, 2].map((j) => <rect key={j} x={x + 6} y={148 + j * 5} width={[38, 34, 26][j]} height="2" fill={BAR} />)}
-          </g>
-        ))}
-      </G>
-      <G t={{ y: ab(0, 52, 2.9, 3.7, d) }}>
-        <rect x="40.5" y="110.5" width="240" height="10" {...BLOCK} />
-        {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={52 + i * 46} y="114" width="26" height="3" fill={BAR} />)}
-        <G t={{ opacity: [[0, 0], [2.75, 0], [2.85, 1], [3.8, 1], [4.0, 0], [d, 0]] }}>
-          <EdgeBox x={40} y={110} w={240} h={10} />
-        </G>
-      </G>
-
-      {/* cta */}
-      <rect x="40.5" y="184.5" width="240" height="30" {...BLOCK} />
-      <rect x="50" y="192" width="110" height="4" fill={BAR} />
-      <rect x="50" y="201" width="80" height="2" fill={BAR} />
-      <rect x="232.5" y="192.5" width="38" height="13" stroke={BAR} fill="none" />
-
-      {/* goes live: light sweep across the page */}
+      <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
       <defs>
-        <linearGradient id={`hg${id}`}>
+        <linearGradient id={`vg${id}`}>
           <stop offset="0" stopColor="#fff" stopOpacity="0" />
           <stop offset="0.5" stopColor="#fff" stopOpacity="0.9" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        <mask id={`hm${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="240">
-          <R t={{ x: ab(-160, 340, 5.2, 6.4, d) }} y={40} width={160} height={200} fill={`url(#hg${id})`} />
+        <mask id={`vm${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="240">
+          <R t={{ x: ab(-160, 340, t, t + 1.2, d) }} y={40} width={160} height={200} fill={`url(#vg${id})`} />
         </mask>
       </defs>
-      <g mask={`url(#hm${id})`} stroke="#bdbdbd" fill="none">
-        <rect x="40.5" y="48.5" width="240" height="50" />
-        {CARDS4.map((x) => <rect key={x} x={x + 0.5} y="110.5" width={CARD_W4} height="40" />)}
-        <rect x="40.5" y="162.5" width="240" height="10" />
-        <rect x="40.5" y="184.5" width="240" height="30" />
+      <g mask={`url(#vm${id})`} stroke="#bdbdbd" fill="none">
+        {boxes.map(([x, y, w, h], i) => <rect key={i} x={x + 0.5} y={y + 0.5} width={w} height={h} />)}
       </g>
-
-      {/* the person: edits the headline, drags the logo row down, flips the switch */}
-      <G
-        t={{
-          x: [[0, 300], [0.4, 300], [1.15, 120], [2.2, 120], [2.75, 170], [3.7, 170], [4.7, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.15, 62], [2.2, 62], [2.75, 116], [2.9, 116], [3.7, 168], [4.7, 18], [d, 18]],
-          opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
-          scale: [[0, 1], [1.15, 1], [1.22, 0.82], [1.32, 1], [2.75, 1], [2.82, 0.85], [3.7, 0.85], [3.8, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
-        }}
-      >
-        <Cursor />
-      </G>
     </>
   );
 }
 
-const PANELS = [AskPanel, BuildPanel, ReviewPanel];
+export function Person({ t }: { t: Record<string, Track> }) {
+  return (
+    <G t={t}>
+      <Cursor />
+    </G>
+  );
+}
+
+/* ── B · GRID: the page stays in squares, like panel 02 and Vibe Fixer ── */
+
+export function rng(seed: number) {
+  return () => {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/** Hero data noise; `end` must equal the panel's loop length so keyframe times stay within 0–1. */
+export const heroNoise = (end: number) => {
+  const r = rng(5);
+  const out: { k: number; row: number; fill: string; t: Track }[] = [];
+  for (let row = 0; row < 5; row++)
+    for (let k = 0; k < 24; k++) {
+      const g = Math.round(48 + r() * 110);
+      const peak = 0.3 + r() * 0.6;
+      const a = 1.35 + r() * 0.2, b = 2.1 + (k / 24) * 0.35 + r() * 0.1;
+      out.push({ k, row, fill: `rgb(${g},${g},${g})`, t: [[0, 0], [a, 0], [a + 0.15, peak], [a + 0.45, peak * 0.4], [b, peak * 0.7], [b + 0.2, 0], [end, 0]] });
+    }
+  return out;
+};
+const HERO_NOISE_B = heroNoise(7.2);
+
+export function ReviewGrid() {
+  const d = useDur();
+  return (
+    <>
+      <SwitchHeader t={4.9} />
+
+      {/* hero: rewritten — data noise, then the new cells settle */}
+      <path d={cellsPath(40, 48, 24, 5)} stroke={GRID} fill="none" />
+      {HERO_NOISE_B.map((n, i) => (
+        <R key={i} t={{ opacity: n.t }} x={40 + n.k * C + 1} y={48 + n.row * C + 1} width={C - 1} height={C - 1} fill={n.fill} />
+      ))}
+      <G t={{ opacity: ab(0, 1, 2.3, 2.6, d) }}>
+        <path d={cellsPath(40, 48, 24, 5)} stroke="#5f5f5f" fill="none" />
+      </G>
+      <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.5, 1], [2.7, 0], [d, 0]] }}>
+        <EdgeBox x={40} y={48} w={240} h={50} />
+      </G>
+
+      {/* cards move up as the logo row is dragged below them */}
+      <G t={{ y: ab(0, -22, 3.0, 3.8, d) }}>
+        {CARDS4.map((x) => (
+          <path key={x} d={cellsPath(0, CARD_Y, 5, 4)} transform={`translate(${x} 0)`} stroke={GRID} fill="none" />
+        ))}
+      </G>
+      <G t={{ y: ab(0, 52, 3.0, 3.8, d) }}>
+        <rect x="40.5" y="110.5" width="240" height="10" fill={BG} />
+        <path d={cellsPath(40, 110, 24, 1)} stroke={GRID} fill="none" />
+        <G t={{ opacity: [[0, 0], [2.85, 0], [2.95, 1], [3.9, 1], [4.1, 0], [d, 0]] }}>
+          <EdgeBox x={40} y={110} w={240} h={10} />
+        </G>
+      </G>
+      <path d={cellsPath(40, 184, 24, 3)} stroke={GRID} fill="none" />
+
+      {/* live: every cell lifts a step */}
+      <G t={{ opacity: ab(0, 1, 5.3, 5.8, d) }}>
+        <path
+          d={cellsPath(40, 48, 24, 5) + CARDS4.map((x) => cellsPath(x, 110, 5, 4)).join("") + cellsPath(40, 162, 24, 1) + cellsPath(40, 184, 24, 3)}
+          stroke="#555"
+          fill="none"
+        />
+      </G>
+      <GoLive id="b" t={5.3} boxes={[[40, 48, 240, 50], ...CARDS4.map((x): [number, number, number, number] => [x, 110, CARD_W4, 40]), [40, 162, 240, 10], [40, 184, 240, 30]]} />
+
+      <Person
+        t={{
+          x: [[0, 300], [0.4, 300], [1.1, 150], [2.4, 150], [2.85, 170], [3.8, 170], [4.8, 290], [d, 290]],
+          y: [[0, 236], [0.4, 236], [1.1, 72], [2.4, 72], [2.85, 116], [3.0, 116], [3.8, 168], [4.8, 18], [d, 18]],
+          opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.5, 1], [5.9, 0], [d, 0]],
+          scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.8, 1], [4.87, 0.82], [4.97, 1], [d, 1]],
+        }}
+      />
+    </>
+  );
+}
+
+const PANELS = [AskPanel, BuildPanel, ReviewGrid];
 
 export function ProductFragments() {
   const ref = useRef<HTMLDivElement>(null);
