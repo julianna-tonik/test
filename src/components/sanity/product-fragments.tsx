@@ -72,8 +72,8 @@ export const cellsPath = (x: number, y: number, cols: number, rows: number) => {
   return d;
 };
 
-function Node({ x, y, color = HI }: { x: number; y: number; color?: string }) {
-  return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill={BG} stroke={color} strokeWidth="0.75" />;
+function Node({ x, y }: { x: number; y: number; color?: string }) {
+  return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill="#4a4a4a" stroke="#8a8a8a" strokeWidth="0.75" />;
 }
 
 export function EdgeBox({ x, y, w, h, dashed, color = HI, nodes = true }: { x: number; y: number; w: number; h: number; dashed?: boolean; color?: string; nodes?: boolean }) {
@@ -143,11 +143,11 @@ export function SwitchHeader({ t }: { t: number }) {
 }
 
 /** Page frame that lights up once live, plus a slow sweep across the given boxes. */
-export function GoLive({ id, t, boxes }: { id: string; t: number; boxes: [number, number, number, number][] }) {
+export function GoLive({ id, t, boxes, frame = [36, 44, 248, 174] }: { id: string; t: number; boxes: [number, number, number, number][]; frame?: [number, number, number, number] }) {
   const d = useDur();
   return (
     <>
-      <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
+      <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={frame[0] + 0.5} y={frame[1] + 0.5} width={frame[2]} height={frame[3]} fill="none" />
       <defs>
         <linearGradient id={`vg${id}`}>
           <stop offset="0" stopColor="#fff" stopOpacity="0" />
@@ -403,22 +403,48 @@ function AskLiteral() {
 
 const LIB = ["Hero", "Logos", "Speakers", "Stories", "Form"];
 const LIB_REST = ["Stats", "Schedule"];
-const BUILT: { name: string; y: number; h: number }[] = [
-  { name: "Hero", y: 44, h: 42 },
-  { name: "Logos", y: 92, h: 14 },
-  { name: "Speakers", y: 112, h: 40 },
-  { name: "Stories", y: 158, h: 28 },
-  { name: "Form", y: 192, h: 24 },
+const SLOTS: { name: string; y: number; h: number }[] = [
+  { name: "Hero", y: 42, h: 40 },
+  { name: "Logos", y: 90, h: 16 },
+  { name: "Speakers", y: 114, h: 40 },
+  { name: "Stories", y: 162, h: 26 },
+  { name: "Form", y: 196, h: 22 },
 ];
+const PBAR = "#4f4f4f";
+const corners4 = (x: number, y: number, w: number, h: number) => [[x + 0.5, y + 0.5], [x + w + 0.5, y + 0.5], [x + 0.5, y + h + 0.5], [x + w + 0.5, y + h + 0.5]] as const;
+
+/** The outline itself changes state: dashed (empty / AI at work, with nodes) → solid. */
+function Slot({ x, y, w, h, s, children }: { x: number; y: number; w: number; h: number; s: number; children: React.ReactNode }) {
+  const d = useDur();
+  const r = { x: x + 0.5, y: y + 0.5, width: w, height: h };
+  return (
+    <>
+      <G t={{ opacity: ab(0, 1, s + 0.25, s + 0.5, d) }}>
+        <rect {...r} fill="#202020" />
+        {children}
+      </G>
+      <G t={{ opacity: ab(1, 0, s, s + 0.1, d) }}>
+        <rect {...r} fill="none" stroke="#444" strokeDasharray="2 3" />
+      </G>
+      <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.6, 1], [s + 0.72, 0], [d, 0]] }}>
+        <rect {...r} fill="none" stroke="#cfcfcf" strokeDasharray="4 3" />
+        {corners4(x, y, w, h).map(([a, b], i) => <Node key={i} x={a} y={b} />)}
+      </G>
+      <G t={{ opacity: ab(0, 1, s + 0.6, s + 0.72, d) }}>
+        <rect {...r} fill="none" stroke="#3a3a3a" />
+      </G>
+    </>
+  );
+}
 
 function BuildLiteral() {
   const d = useDur();
-  const PX = 88, PW = 222;
+  const PX = 90, PW = 218;
   return (
     <>
       <Header>
         <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
-        <MonoT x={32} y={19.5}>Sanity Studio · Events</MonoT>
+        <MonoT x={32} y={19.5}>Sanity Studio</MonoT>
         <G t={{ opacity: ab(1, 0, 3.15, 3.3, d) }}>
           <MonoT x={310} y={19.5} anchor="end" color="#666">Building…</MonoT>
         </G>
@@ -427,60 +453,96 @@ function BuildLiteral() {
         </G>
       </Header>
 
-      {/* approved section library */}
-      <MonoT x={10} y={46} size={5.5} color="#666">Approved sections</MonoT>
-      {[...LIB, ...LIB_REST].map((n, i) => (
-        <g key={n}>
-          <rect x="10.5" y={52.5 + i * 20} width="66" height="15" stroke="#383838" fill="#202020" />
-          <MonoT x={16} y={62.5 + i * 20} size={5.5} color={i < LIB.length ? MID : "#555"}>{n}</MonoT>
-        </g>
-      ))}
-
-      {/* empty slots of the event template, waiting for sections */}
-      {BUILT.map((b) => (
-        <rect key={b.name} x={PX + 0.5} y={b.y + 0.5} width={PW} height={b.h} stroke="#333" strokeDasharray="2 3" fill="none" />
-      ))}
-      {BUILT.map((b, i) => {
+      {/* approved section library — a picked chip's outline goes dashed, then lights up */}
+      {[...LIB, ...LIB_REST].map((n, i) => {
         const s = 0.2 + i * 0.6;
+        const picked = i < LIB.length;
+        const y = 42 + i * 22;
         return (
-          <g key={b.name}>
-            {/* chip picked */}
-            <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.5, 1], [s + 0.6, 0], [d, 0]] }}>
-              <EdgeBox x={10} y={52 + i * 20} w={66} h={15} dashed />
-            </G>
-            <G t={{ opacity: ab(0, 1, s + 0.1, s + 0.3, d) }}>
-              <rect x="10.5" y={52.5 + i * 20} width="66" height="15" stroke={EDGE} fill="none" />
-              <MonoT x={16} y={62.5 + i * 20} size={5.5} color={HI}>{b.name}</MonoT>
-            </G>
-            {/* section placed on the page */}
-            <G t={{ opacity: ab(0, 1, s + 0.2, s + 0.45, d) }}>
-              <rect x={PX + 0.5} y={b.y + 0.5} width={PW} height={b.h} fill="#202020" stroke="#383838" />
-              <MonoT x={PX + 6} y={b.y + 9} size={5} color="#777">{b.name}</MonoT>
-              {b.name === "Hero" && <SansT x={PX + 6} y={b.y + 28} size={11}>NYC Security Summit</SansT>}
-              {b.name === "Logos" && [0, 1, 2, 3, 4].map((k) => <rect key={k} x={PX + 60 + k * 32} y={b.y + 5} width="20" height="4" fill="#555" />)}
-              {b.name === "Speakers" && [0, 1, 2, 3].map((k) => <rect key={k} x={PX + 6.5 + k * 54} y={b.y + 15.5} width="18" height="18" stroke="#555" fill="none" />)}
-              {b.name === "Stories" && <SansT x={PX + 6} y={b.y + 21} size={8}>“Our strongest rollout yet.” — Acme</SansT>}
-              {b.name === "Form" && (
-                <>
-                  <rect x={PX + 6.5} y={b.y + 11.5} width="120" height="9" stroke="#555" fill="none" />
-                  <rect x={PX + 132.5} y={b.y + 11.5} width="50" height="9" stroke="#777" fill="none" />
-                </>
-              )}
-            </G>
-            <G t={{ opacity: [[0, 0], [s + 0.15, 0], [s + 0.25, 1], [s + 0.55, 1], [s + 0.65, 0], [d, 0]] }}>
-              <EdgeBox x={PX} y={b.y} w={PW} h={b.h} dashed />
-            </G>
+          <g key={n}>
+            <rect x="10.5" y={y + 0.5} width="68" height="16" fill="#202020" />
+            <MonoT x={18} y={y + 11} size={5.5} color={picked ? MID : "#555"}>{n}</MonoT>
+            {picked ? (
+              <>
+                <G t={{ opacity: ab(1, 0, s, s + 0.1, d) }}>
+                  <rect x="10.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#383838" />
+                </G>
+                <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.45, 1], [s + 0.55, 0], [d, 0]] }}>
+                  <rect x="10.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#cfcfcf" strokeDasharray="4 3" />
+                  {corners4(10, y, 68, 16).map(([a, b], k) => <Node key={k} x={a} y={b} />)}
+                </G>
+                <G t={{ opacity: ab(0, 1, s + 0.45, s + 0.55, d) }}>
+                  <rect x="10.5" y={y + 0.5} width="68" height="16" fill="#2a2a2a" stroke="#8a8a8a" />
+                  <MonoT x={18} y={y + 11} size={5.5} color={HI}>{n}</MonoT>
+                </G>
+              </>
+            ) : (
+              <rect x="10.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#333" />
+            )}
           </g>
+        );
+      })}
+
+      {/* the event template fills up — sections shown as content, not names */}
+      {SLOTS.map((b, i) => {
+        const s = 0.35 + i * 0.6;
+        return (
+          <Slot key={b.name} x={PX} y={b.y} w={PW} h={b.h} s={s}>
+            {b.name === "Hero" && (
+              <>
+                <SansT x={PX + 12} y={b.y + 22} size={11}>NYC Security Summit</SansT>
+                <rect x={PX + 12} y={b.y + 29} width="60" height="2.5" fill={PBAR} />
+              </>
+            )}
+            {b.name === "Logos" && [0, 1, 2, 3, 4].map((k) => <rect key={k} x={PX + 16 + k * 40} y={b.y + 6.5} width="22" height="3" fill="#666" />)}
+            {b.name === "Speakers" && [0, 1, 2, 3].map((k) => (
+              <g key={k}>
+                <circle cx={PX + 30 + k * 52} cy={b.y + 16} r="7" stroke="#666" fill="none" />
+                <rect x={PX + 21 + k * 52} y={b.y + 28} width="18" height="2.5" fill={PBAR} />
+              </g>
+            ))}
+            {b.name === "Stories" && (
+              <>
+                <circle cx={PX + 18} cy={b.y + 13} r="6" stroke="#666" fill="none" />
+                <rect x={PX + 32} y={b.y + 8} width="150" height="2.5" fill={PBAR} />
+                <rect x={PX + 32} y={b.y + 15} width="100" height="2.5" fill={PBAR} />
+              </>
+            )}
+            {b.name === "Form" && (
+              <>
+                <rect x={PX + 10.5} y={b.y + 5.5} width="128" height="11" stroke="#555" fill="none" />
+                <rect x={PX + 146.5} y={b.y + 5.5} width="60" height="11" stroke="#8a8a8a" fill="none" />
+              </>
+            )}
+          </Slot>
         );
       })}
     </>
   );
 }
 
+/** Review block: its own outline turns light (a person's selection) while `sel` is on. */
+function RBlock({ x, y, w, h, sel, children }: { x: number; y: number; w: number; h: number; sel?: Track; children?: React.ReactNode }) {
+  const r = { x: x + 0.5, y: y + 0.5, width: w, height: h };
+  return (
+    <>
+      <rect {...r} fill="#202020" stroke="#333" />
+      {children}
+      {sel && (
+        <G t={{ opacity: sel }}>
+          <rect {...r} fill="none" stroke="#cfcfcf" />
+          {corners4(x, y, w, h).map(([a, b], i) => <Node key={i} x={a} y={b} />)}
+        </G>
+      )}
+    </>
+  );
+}
+
 function ReviewLiteral() {
   const d = useDur();
-  const X = 20, W = 280;
-  const boxes: [number, number, number, number][] = [[X, 44, W, 12], [X, 62, W, 58], [X, 126, W, 34], [X, 166, W, 34], [X, 206, W, 12]];
+  const X = 24, W = 272;
+  const sel = (a: number, b: number): Track => [[0, 0], [a, 0], [a + 0.1, 1], [b, 1], [b + 0.2, 0], [d, 0]];
+  const boxes: [number, number, number, number][] = [[X, 40, W, 12], [X, 60, W, 60], [X, 128, W, 34], [X, 170, W, 34], [X, 212, W, 10]];
   return (
     <>
       <Header>
@@ -502,56 +564,50 @@ function ReviewLiteral() {
       </Header>
 
       {/* nav */}
-      <rect x={X + 0.5} y="44.5" width={W} height="12" fill="#202020" stroke="#333" />
-      <MonoT x={X + 6} y={52.5} size={5}>Summit / NYC</MonoT>
-      <MonoT x={X + W - 6} y={52.5} size={5} anchor="end">Speakers   Schedule   Register</MonoT>
+      <RBlock x={X} y={40} w={W} h={12}>
+        <rect x={X + 10} y={44.5} width="34" height="3" fill={PBAR} />
+        {[0, 1, 2].map((k) => <rect key={k} x={X + W - 80 + k * 24} y={44.5} width="16" height="3" fill={PBAR} />)}
+      </RBlock>
 
       {/* hero — the person rewrites the headline */}
-      <rect x={X + 0.5} y="62.5" width={W} height="58" fill="#202020" stroke="#333" />
-      <MonoT x={X + 8} y={74} size={5}>Enterprise security summit</MonoT>
-      <G t={{ opacity: ab(1, 0, 1.35, 1.55, d) }}>
-        <SansT x={X + 8} y={91} size={13}>Build trust into</SansT>
-        <SansT x={X + 8} y={106} size={13}>every layer.</SansT>
-      </G>
-      <TypedT id="rv1" x={X + 8} y={91} w={130} t0={1.6} t1={2.0} size={13}>Security leaders,</TypedT>
-      <TypedT id="rv2" x={X + 8} y={106} w={130} t0={2.0} t1={2.35} size={13}>meet in New York.</TypedT>
-      <rect x={X + 200.5} y="98.5" width="64" height="13" stroke="#666" fill="none" />
-      <MonoT x={X + 232} y={107} size={5} anchor="middle">Register</MonoT>
-      <G t={{ opacity: [[0, 0], [1.15, 0], [1.25, 1], [2.4, 1], [2.6, 0], [d, 0]] }}>
-        <EdgeBox x={X + 4} y={80} w={150} h={32} />
-      </G>
-
-      {/* speakers ↓ / stories ↑ — the person drags stories above speakers */}
-      <G t={{ y: ab(0, 40, 3.0, 3.8, d) }}>
-        <rect x={X + 0.5} y="126.5" width={W} height="34" fill="#202020" stroke="#333" />
-        <MonoT x={X + 6} y={135} size={5} color="#777">Speakers</MonoT>
-        {[0, 1, 2, 3].map((k) => (
-          <g key={k}>
-            <rect x={X + 6.5 + k * 68} y="140.5" width="14" height="14" stroke="#555" fill="none" />
-            <rect x={X + 25 + k * 68} y="144" width="34" height="2" fill="#555" />
-            <rect x={X + 25 + k * 68} y="149" width="24" height="2" fill="#444" />
-          </g>
-        ))}
-      </G>
-      <G t={{ y: ab(0, -40, 3.0, 3.8, d) }}>
-        <rect x={X + 0.5} y="166.5" width={W} height="34" fill="#202020" stroke="#333" />
-        <MonoT x={X + 6} y={175} size={5} color="#777">Customer stories</MonoT>
-        <SansT x={X + 6} y={190} size={8.5}>“Our strongest rollout, with zero surprises.”</SansT>
-        <G t={{ opacity: [[0, 0], [2.85, 0], [2.95, 1], [3.9, 1], [4.1, 0], [d, 0]] }}>
-          <EdgeBox x={X} y={166} w={W} h={34} />
+      <RBlock x={X} y={60} w={W} h={60} sel={sel(1.15, 2.4)}>
+        <G t={{ opacity: ab(1, 0, 1.35, 1.55, d) }}>
+          <SansT x={X + 14} y={84} size={12.5}>Build trust into</SansT>
+          <SansT x={X + 14} y={99} size={12.5}>every layer.</SansT>
         </G>
+        <TypedT id="rv1" x={X + 14} y={84} w={130} t0={1.6} t1={2.0} size={12.5}>Security leaders,</TypedT>
+        <TypedT id="rv2" x={X + 14} y={99} w={130} t0={2.0} t1={2.35} size={12.5}>meet in New York.</TypedT>
+        <rect x={X + 14.5} y={106.5} width="56" height="8" stroke="#666" fill="none" />
+      </RBlock>
+
+      {/* speakers ↓ / stories ↑ — the person drags customer stories above speakers */}
+      <G t={{ y: ab(0, 42, 3.0, 3.8, d) }}>
+        <RBlock x={X} y={128} w={W} h={34}>
+          {[0, 1, 2, 3].map((k) => (
+            <g key={k}>
+              <circle cx={X + 30 + k * 66} cy={142} r="7" stroke="#666" fill="none" />
+              <rect x={X + 21 + k * 66} y={153} width="18" height="2.5" fill={PBAR} />
+            </g>
+          ))}
+        </RBlock>
+      </G>
+      <G t={{ y: ab(0, -42, 3.0, 3.8, d) }}>
+        <RBlock x={X} y={170} w={W} h={34} sel={sel(2.85, 3.9)}>
+          <circle cx={X + 22} cy={187} r="7" stroke="#666" fill="none" />
+          <rect x={X + 38} y={181} width="170" height="2.5" fill={PBAR} />
+          <rect x={X + 38} y={188} width="120" height="2.5" fill={PBAR} />
+        </RBlock>
       </G>
 
       {/* footer */}
-      <rect x={X + 0.5} y="206.5" width={W} height="12" fill="#202020" stroke="#333" />
+      <RBlock x={X} y={212} w={W} h={10} />
 
-      {/* live */}
-      <GoLive id="lit" t={5.2} boxes={boxes} />
+      <GoLive id="lit" t={5.2} boxes={boxes} frame={[X - 6, 34, W + 12, 194]} />
 
       <Person
         t={{
-          x: [[0, 300], [0.4, 300], [1.1, 90], [2.4, 90], [2.85, 200], [3.8, 200], [4.7, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.1, 96], [2.4, 96], [2.85, 184], [3.0, 184], [3.8, 144], [4.7, 18], [d, 18]],
+          x: [[0, 300], [0.4, 300], [1.1, 110], [2.4, 110], [2.85, 210], [3.8, 210], [4.7, 290], [d, 290]],
+          y: [[0, 236], [0.4, 236], [1.1, 92], [2.4, 92], [2.85, 188], [3.0, 188], [3.8, 146], [4.7, 18], [d, 18]],
           opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
           scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
         }}
