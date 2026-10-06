@@ -243,7 +243,7 @@ function SceneReport() {
       </G>
 
       {/* staging preview */}
-      <G t={{ opacity: show(4.6, 0.5), x: ev(-24, 0, 4.6, 5.3) }}>
+      <G t={{ opacity: [[0, 0], [4.6, 0], [5.1, 1], [6.0, 1], [6.4, 0], [D, 0]], x: stay(-24, 0, 4.6, 5.3) }}>
         <line x1="274" y1="100.5" x2="306" y2="100.5" stroke={MUTED} strokeWidth="0.75" strokeDasharray="2 3" />
         <g stroke={CHANGED_EDGE} strokeWidth="0.75" fill="none">
           <rect x="318.5" y="24.5" width="138" height="150" />
@@ -467,7 +467,7 @@ function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
   return (
     <>
       <MEdge x={x} y={22} w={w} h={2 * M} dashed t={pulse(s, s + 0.6)} />
-      <G t={{ y: ev(0, 90, s + 0.4, s + 1.2), opacity: show(s + 0.3, 0.2) }}>
+      <G t={{ y: stay(0, 90, s + 0.4, s + 1.2), opacity: [[0, 0], [s + 0.3, 0], [s + 0.5, 1], [6.0, 1], [6.4, 0], [D, 0]] }}>
         <rect x={x + 0.5} y={22.5} width={w} height={2 * M} fill={BG} />
         <path d={mPath(x, 22, cols, 2)} stroke={CHANGED_CELL} fill="none" />
         <MEdge x={x} y={22} w={w} h={2 * M} dashed t={pulse(s + 0.3, s + 1.2)} />
