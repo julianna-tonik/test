@@ -281,21 +281,22 @@ export function ReviewApprove() {
 
 /* ── D · GRID + APPROVE: squares like B, AI's blocks dashed like C, a person makes them solid ── */
 
-/** A grid block drafted by AI (dashed edge) that a person approves at `at` (solid edge, cells lift a step). */
+/**
+ * A grid block drafted by AI — the whole grid is dashed, so nothing solid sits underneath —
+ * which a person approves at `at`: the grid turns solid and lifts a step, the edge goes light.
+ */
 function MixBlock({ x, y, cols, rows, at, flash }: { x: number; y: number; cols: number; rows: number; at: number; flash?: [number, number] }) {
   const d = useDur();
   const w = cols * C, h = rows * C;
+  const grid = cellsPath(x, y, cols, rows);
   return (
     <>
       <rect x={x + 0.5} y={y + 0.5} width={w} height={h} fill={BG} />
-      <path d={cellsPath(x, y, cols, rows)} stroke={GRID} fill="none" />
+      <G t={{ opacity: ab(1, 0, at, at + 0.3, d) }}>
+        <path d={grid} stroke="#6a6a6a" strokeDasharray="2 2" fill="none" />
+      </G>
       <G t={{ opacity: ab(0, 1, at, at + 0.3, d) }}>
-        <path d={cellsPath(x, y, cols, rows)} stroke="#555" fill="none" />
-      </G>
-      <G t={{ opacity: ab(1, 0, at, at + 0.25, d) }}>
-        <rect x={x + 0.5} y={y + 0.5} width={w} height={h} stroke={MID} strokeDasharray="3 3" fill="none" />
-      </G>
-      <G t={{ opacity: ab(0, 1, at, at + 0.25, d) }}>
+        <path d={grid} stroke="#555" fill="none" />
         <rect x={x + 0.5} y={y + 0.5} width={w} height={h} stroke={EDGE} fill="none" />
       </G>
       {flash && (
