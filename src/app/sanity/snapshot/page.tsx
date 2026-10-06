@@ -3,6 +3,8 @@
 import { PANELS, PHASE_S, PanelCtx } from "@/components/sanity/product-fragments";
 import { MigrationLanes, RequestScene } from "@/components/sanity/request-scenes";
 import { icons } from "@/components/sanity/what-changes";
+import { icons as whereIcons } from "@/components/sanity/where-icons";
+import { LetterIcon, steps } from "@/components/sanity/how-it-works";
 
 /** Static end-state of every illustration, for exporting to Figma. Not linked from the site. */
 export default function SnapshotPage() {
@@ -19,7 +21,7 @@ export default function SnapshotPage() {
       </div>
       {[0, 1, 2, 3].map((i) => (
         <div key={i} data-snap-wrap={`example-${i + 1}`} className="w-[960px]">
-          <RequestScene index={i} active={false} snapshot />
+          <RequestScene index={i} active={false} snapshot scope="w" />
         </div>
       ))}
       <div data-snap-wrap="migration" className="w-[960px]">
@@ -30,6 +32,20 @@ export default function SnapshotPage() {
           <svg key={i} data-snap={`icon-${i + 1}`} viewBox="0 0 84 84" fill="none" className="size-[84px]">
             {ic(false)}
           </svg>
+        ))}
+      </div>
+      <div className="flex gap-6">
+        {whereIcons.map((ic, i) => (
+          <svg key={i} data-snap={`where-${i + 1}`} viewBox="0 0 84 84" fill="none" className="size-[84px]">
+            {ic(false)}
+          </svg>
+        ))}
+      </div>
+      <div className="flex gap-6">
+        {steps.map((s, i) => (
+          <div key={s.glyph} data-snap-wrap={`letter-${s.glyph}`}>
+            <LetterIcon glyph={s.glyph} index={i + 1} actor={s.actor} />
+          </div>
         ))}
       </div>
     </div>
