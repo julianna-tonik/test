@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { Separator } from "@/components/ui/separator";
-import { ReviewApprove, ReviewGrid, ReviewText, VariantPlayer } from "@/components/sanity/review-variants";
+import { ReviewApprove, ReviewGrid, ReviewMix, ReviewText, VariantPlayer } from "@/components/sanity/review-variants";
 
 export const metadata: Metadata = {
   title: "Review — warianty | tonik",
@@ -8,6 +8,13 @@ export const metadata: Metadata = {
 };
 
 const variants = [
+  {
+    key: "D",
+    name: "Siatka + zatwierdzanie",
+    Panel: ReviewMix,
+    dur: 7.6,
+    note: "Połączenie B i C. Strona zostaje w kwadratach, a każdy blok od AI ma przerywany obrys. Człowiek przepisuje nagłówek (szum się uspokaja) i go zatwierdza, przeciąga logotypy pod karty, zatwierdza karty i CTA — każdy zatwierdzony blok dostaje pełny obrys, a jego kratki się rozjaśniają. Na końcu LIVE.",
+  },
   {
     key: "A",
     name: "Text",
@@ -39,7 +46,7 @@ export default function ReviewVariantsPage() {
           <Separator />
           <p className="font-mono text-sm uppercase leading-none tracking-tight">Hero · 03 Review — trzy kierunki</p>
         </div>
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
           {variants.map((v) => (
             <div key={v.key} className="flex flex-col gap-5">
               <VariantPlayer Panel={v.Panel} dur={v.dur} />

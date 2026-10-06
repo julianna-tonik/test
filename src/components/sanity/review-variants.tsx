@@ -146,7 +146,8 @@ function rng(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const HERO_NOISE = (() => {
+/** Hero data noise; `end` must equal the panel's loop length so keyframe times stay within 0–1. */
+const heroNoise = (end: number) => {
   const r = rng(5);
   const out: { k: number; row: number; fill: string; t: Track }[] = [];
   for (let row = 0; row < 5; row++)
@@ -154,10 +155,12 @@ const HERO_NOISE = (() => {
       const g = Math.round(48 + r() * 110);
       const peak = 0.3 + r() * 0.6;
       const a = 1.35 + r() * 0.2, b = 2.1 + (k / 24) * 0.35 + r() * 0.1;
-      out.push({ k, row, fill: `rgb(${g},${g},${g})`, t: [[0, 0], [a, 0], [a + 0.15, peak], [a + 0.45, peak * 0.4], [b, peak * 0.7], [b + 0.2, 0], [7.2, 0]] });
+      out.push({ k, row, fill: `rgb(${g},${g},${g})`, t: [[0, 0], [a, 0], [a + 0.15, peak], [a + 0.45, peak * 0.4], [b, peak * 0.7], [b + 0.2, 0], [end, 0]] });
     }
   return out;
-})();
+};
+const HERO_NOISE_B = heroNoise(7.2);
+const HERO_NOISE_D = heroNoise(7.6);
 
 export function ReviewGrid() {
   const d = useDur();
@@ -167,7 +170,7 @@ export function ReviewGrid() {
 
       {/* hero: rewritten — data noise, then the new cells settle */}
       <path d={cellsPath(40, 48, 24, 5)} stroke={GRID} fill="none" />
-      {HERO_NOISE.map((n, i) => (
+      {HERO_NOISE_B.map((n, i) => (
         <R key={i} t={{ opacity: n.t }} x={40 + n.k * C + 1} y={48 + n.row * C + 1} width={C - 1} height={C - 1} fill={n.fill} />
       ))}
       <G t={{ opacity: ab(0, 1, 2.3, 2.6, d) }}>
@@ -270,6 +273,77 @@ export function ReviewApprove() {
           y: [[0, 236], [0.4, 236], [1.05, 62], [1.9, 62], [2.15, 116], [2.55, 116], [2.8, 152], [3.75, 152], [3.95, 152], [4.4, 152], [4.7, 198], [5.0, 198], [5.5, 18], [d, 18]],
           opacity: [[0, 0], [0.4, 0], [0.6, 1], [6.2, 1], [6.6, 0], [d, 0]],
           scale: [[0, 1], [1.05, 1], [1.12, 0.82], [1.22, 1], [2.15, 1], [2.22, 0.82], [2.32, 1], [2.85, 1], [2.9, 0.85], [3.6, 0.85], [3.7, 1], [3.95, 1], [4.02, 0.82], [4.12, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [5.5, 1], [5.57, 0.82], [5.67, 1], [d, 1]],
+        }}
+      />
+    </>
+  );
+}
+
+/* ── D · GRID + APPROVE: squares like B, AI's blocks dashed like C, a person makes them solid ── */
+
+/** A grid block drafted by AI (dashed edge) that a person approves at `at` (solid edge, cells lift a step). */
+function MixBlock({ x, y, cols, rows, at, flash }: { x: number; y: number; cols: number; rows: number; at: number; flash?: [number, number] }) {
+  const d = useDur();
+  const w = cols * C, h = rows * C;
+  return (
+    <>
+      <rect x={x + 0.5} y={y + 0.5} width={w} height={h} fill={BG} />
+      <path d={cellsPath(x, y, cols, rows)} stroke={GRID} fill="none" />
+      <G t={{ opacity: ab(0, 1, at, at + 0.3, d) }}>
+        <path d={cellsPath(x, y, cols, rows)} stroke="#555" fill="none" />
+      </G>
+      <G t={{ opacity: ab(1, 0, at, at + 0.25, d) }}>
+        <rect x={x + 0.5} y={y + 0.5} width={w} height={h} stroke={MID} strokeDasharray="3 3" fill="none" />
+      </G>
+      <G t={{ opacity: ab(0, 1, at, at + 0.25, d) }}>
+        <rect x={x + 0.5} y={y + 0.5} width={w} height={h} stroke={EDGE} fill="none" />
+      </G>
+      {flash && (
+        <G t={{ opacity: [[0, 0], [flash[0] - 0.05, 0], [flash[0] + 0.05, 1], [flash[1], 1], [flash[1] + 0.2, 0], [d, 0]] }}>
+          <EdgeBox x={x} y={y} w={w} h={h} />
+        </G>
+      )}
+    </>
+  );
+}
+
+export function ReviewMix() {
+  const d = useDur();
+  const CARDS_AT = 4.3;
+  return (
+    <>
+      <SwitchHeader t={5.7} />
+
+      {/* hero: the person rewrites it (noise settles), then it is approved */}
+      <MixBlock x={40} y={48} cols={24} rows={5} at={2.5} flash={[1.15, 2.6]} />
+      {HERO_NOISE_D.map((n, i) => (
+        <R key={i} t={{ opacity: n.t }} x={40 + n.k * C + 1} y={48 + n.row * C + 1} width={C - 1} height={C - 1} fill={n.fill} />
+      ))}
+
+      {/* cards move up as the logo row is dragged below them; approved together */}
+      <G t={{ y: ab(0, -22, 2.9, 3.7, d) }}>
+        {CARDS4.map((x) => (
+          <MixBlock key={x} x={x} y={CARD_Y} cols={5} rows={4} at={CARDS_AT} />
+        ))}
+        <G t={{ opacity: [[0, 0], [CARDS_AT - 0.05, 0], [CARDS_AT + 0.05, 1], [CARDS_AT + 0.6, 1], [CARDS_AT + 0.8, 0], [d, 0]] }}>
+          <EdgeBox x={40} y={CARD_Y} w={240} h={40} />
+        </G>
+      </G>
+      <G t={{ y: ab(0, 52, 2.9, 3.7, d) }}>
+        <MixBlock x={40} y={110} cols={24} rows={1} at={3.75} flash={[2.8, 3.8]} />
+      </G>
+
+      {/* cta */}
+      <MixBlock x={40} y={184} cols={24} rows={3} at={4.95} flash={[4.95, 5.4]} />
+
+      <GoLive id="d" t={6.1} boxes={[[40, 48, 240, 50], ...CARDS4.map((x): [number, number, number, number] => [x, 110, CARD_W4, 40]), [40, 162, 240, 10], [40, 184, 240, 30]]} />
+
+      <Person
+        t={{
+          x: [[0, 300], [0.4, 300], [1.05, 150], [2.45, 150], [2.75, 170], [3.7, 170], [4.15, 160], [4.7, 160], [4.9, 200], [5.2, 200], [5.6, 290], [d, 290]],
+          y: [[0, 236], [0.4, 236], [1.05, 72], [2.45, 72], [2.75, 116], [2.9, 116], [3.7, 168], [4.15, 130], [4.7, 130], [4.9, 199], [5.2, 199], [5.6, 18], [d, 18]],
+          opacity: [[0, 0], [0.4, 0], [0.6, 1], [6.3, 1], [6.7, 0], [d, 0]],
+          scale: [[0, 1], [1.05, 1], [1.12, 0.82], [1.22, 1], [2.45, 1], [2.5, 0.82], [2.6, 1], [2.75, 1], [2.82, 0.85], [3.7, 0.85], [3.8, 1], [4.25, 1], [4.32, 0.82], [4.42, 1], [4.9, 1], [4.97, 0.82], [5.07, 1], [5.6, 1], [5.67, 0.82], [5.77, 1], [d, 1]],
         }}
       />
     </>
