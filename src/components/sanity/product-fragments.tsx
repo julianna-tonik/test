@@ -195,15 +195,25 @@ function BuildPanel() {
         </G>
       ))}
 
-      {/* the new card: AI marks the free slot (dashed), fills it, then it settles (solid) */}
-      <G t={{ opacity: [[0, 0], [1.2, 0], [1.4, 1], [2.3, 1], [2.45, 0], [d, 0]] }}>
-        <EdgeBox x={CARDS4[3]} y={y} w={CARD_W4} h={h} dashed />
-      </G>
+      {/* the new card: AI marks the free slot (dashed), fills it; the same outline then closes into a solid line */}
       <G t={{ opacity: ab(0, 1, 1.5, 2.0, d) }}>
         <path d={cellsPath(CARDS4[3], y, 5, 4)} stroke={GRID} fill="none" />
       </G>
-      <G t={{ opacity: ab(0, 1, 2.3, 2.45, d) }}>
-        <rect x={CARDS4[3] + 0.5} y={y + 0.5} width={CARD_W4} height={h} stroke={EDGE} fill="none" />
+      <R
+        t={{
+          opacity: ab(0, 1, 1.2, 1.4, d),
+          strokeDasharray: [[0, "4 3"], [2.1, "4 3"], [2.6, "4 0"], [d, "4 0"]],
+          stroke: [[0, HI], [2.4, HI], [2.9, EDGE], [d, EDGE]],
+        }}
+        x={CARDS4[3] + 0.5}
+        y={y + 0.5}
+        width={CARD_W4}
+        height={h}
+        fill="none"
+      />
+      {/* nodes stay on top the whole time, then step away once the card has settled */}
+      <G t={{ opacity: [[0, 0], [1.2, 0], [1.4, 1], [2.7, 1], [3.0, 0], [d, 0]] }}>
+        {[[0, 0], [CARD_W4, 0], [0, h], [CARD_W4, h]].map(([dx, dy], k) => <Node key={k} x={CARDS4[3] + 0.5 + dx} y={y + 0.5 + dy} />)}
       </G>
     </>
   );

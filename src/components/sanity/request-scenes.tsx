@@ -349,16 +349,8 @@ function Page({ variant }: { variant: "A" | "B" }) {
     <>
       <Cells x={0} y={6} cols={14} rows={1} />
       <Cells x={0} y={26} cols={14} rows={3} />
-      {b ? (
-        <>
-          {/* B is laid out differently: two blocks, then three */}
-          <Cells x={0} y={62} cols={6} rows={2} />
-          <Cells x={7 * C} y={62} cols={7} rows={2} />
-          {[0, 5, 10].map((k) => <Cells key={k} x={k * C} y={88} cols={4} rows={3} />)}
-        </>
-      ) : (
-        <Cells x={0} y={70} cols={14} rows={4} />
-      )}
+      {/* same page; B's content block is a row shorter */}
+      <Cells x={0} y={70} cols={14} rows={b ? 3 : 4} />
       <Cells x={0} y={126} cols={5} rows={1} />
       <Cells x={0} y={146} cols={14} rows={1} />
       {b && (

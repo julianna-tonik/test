@@ -31,16 +31,19 @@ const icons: ((on: boolean) => React.ReactNode)[] = [
       </Drift>
     </>
   ),
-  // Connect external systems — the site wired to four other tools
+  // Connect external systems — the site wired to four tools; the right one connects: its line draws in, then the tool lights up
   (on) => (
     <>
       <rect x="31.5" y="31.5" width="22" height="22" stroke={D} />
-      <path d="M42.5 31V19M42.5 54V66M31 42.5H19M54 42.5H66" stroke={D} />
+      <path d="M42.5 31V19M42.5 54V66M31 42.5H19" stroke={D} />
       <rect x="38.5" y="10.5" width="8" height="8" stroke={G} />
       <rect x="10.5" y="38.5" width="8" height="8" stroke={G} />
-      <rect x="66.5" y="38.5" width="8" height="8" stroke={G} />
-      <Drift i={4} on={on} to={{ y: 5 }}>
-        <rect x="38.5" y="66.5" width="8" height="8" stroke={G} />
+      <rect x="38.5" y="66.5" width="8" height="8" stroke={G} />
+      <Drift i={4} on={on} to={{ scaleX: 0 }} style={{ transformBox: "fill-box", originX: 0 }}>
+        <path d="M54 42.5H66" stroke={D} />
+      </Drift>
+      <Drift i={4} on={on} to={{ opacity: 0.25 }}>
+        <rect x="66.5" y="38.5" width="8" height="8" stroke={G} />
       </Drift>
     </>
   ),
