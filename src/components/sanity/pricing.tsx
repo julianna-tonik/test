@@ -7,7 +7,7 @@ import { Reveal, SectionLabel } from "./shared";
 /** Same anatomy as the Vibe Fixer PricingCard (border, p-10, gap-y-6, title 3xl, price xl, connected list). */
 function PricingCard({ duration, title, description, price, features }: { duration: string; title: string; description: string; price: string; features: string[] }) {
   return (
-    <div className="grid h-full flex-1 grid-cols-1 content-start items-start justify-items-start gap-4 gap-y-6 border border-dark-grey p-10 md:grid-cols-2 lg:grid-cols-1">
+    <div className="grid h-full flex-1 grid-cols-1 content-start items-start justify-items-start gap-4 gap-y-6 border border-dark-grey p-6 md:grid-cols-2 md:p-10 lg:grid-cols-1">
       <div className="flex w-full flex-col gap-4">
         <div className="grid w-full grid-rows-[auto_auto_calc(var(--spacing)*12)] gap-2">
           <p className="font-mono text-sm uppercase leading-none tracking-tight text-off-white">{duration}</p>
@@ -72,8 +72,8 @@ export function SanityPricing() {
     <section className="flex w-full max-w-container-6xl flex-col gap-[120px] pb-[120px]">
       <SectionLabel>Ballpark pricing · $150/hour</SectionLabel>
       <div className="flex w-full flex-col gap-16">
-        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
-          <Reveal>
+        <div className="-mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-1 md:overflow-visible md:px-0 lg:grid-cols-2 [&::-webkit-scrollbar]:hidden">
+          <Reveal className="w-[85%] shrink-0 snap-start md:w-auto">
             <PricingCard
               duration="From 24 hours"
               title="Focused site setup"
@@ -82,7 +82,7 @@ export function SanityPricing() {
               features={["A focused set of core marketing pages", "Ready-to-use frontend repository", "Sanity CMS and reusable sections", "Preview and deployment workflow", "Conversational workflow through MCP"]}
             />
           </Reveal>
-          <Reveal delay={0.08}>
+          <Reveal delay={0.08} className="w-[85%] shrink-0 snap-start md:w-auto">
             <PricingCard
               duration="From 8 weeks"
               title="Large content migration"

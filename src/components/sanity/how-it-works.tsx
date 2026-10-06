@@ -16,7 +16,7 @@ const GLYPHS: Record<string, string> = {
  * Letter icon in the Vibe Fixer F/T/S style: glyph in square + circle, corner index.
  * The circle carries the actor: solid = a person, dashed = AI.
  */
-function LetterIcon({ glyph, index, actor }: { glyph: string; index: number; actor: Actor }) {
+export function LetterIcon({ glyph, index, actor }: { glyph: string; index: number; actor: Actor }) {
   return (
     <svg aria-hidden viewBox="0 0 57.13 57.13" fill="none" className="size-[57px]">
       <rect x=".25" y=".25" width="56.63" height="56.63" stroke="#666" strokeWidth=".5" />
@@ -34,7 +34,7 @@ function LetterIcon({ glyph, index, actor }: { glyph: string; index: number; act
   );
 }
 
-const steps: { glyph: string; title: string; text: string; actor: Actor }[] = [
+export const steps: { glyph: string; title: string; text: string; actor: Actor }[] = [
   { glyph: "D", title: "Describe what you need.", text: "Share the launch, audience, and goal.", actor: "human" },
   { glyph: "U", title: "Use what already works.", text: "The draft uses approved sections and existing content.", actor: "ai" },
   { glyph: "G", title: "Get a real draft.", text: "Review the page in Sanity and on staging.", actor: "human" },

@@ -135,10 +135,12 @@ export function SanityWhatChanges() {
             Marketing moves faster. <span className="text-off-white-light">The website stays consistent.</span>
           </p>
         </Reveal>
-        <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 sm:gap-y-14 md:grid-cols-3">
           {items.map(({ title, text, icon }, i) => (
-            <Reveal key={title} delay={(i % 3) * 0.08} className="flex flex-col gap-6">
-              <Icon i={icon} />
+            <Reveal key={title} delay={(i % 3) * 0.08} className="flex flex-row items-start gap-6 sm:flex-col">
+              <div className="shrink-0">
+                <Icon i={icon} />
+              </div>
               <div className="flex w-full flex-col text-base leading-6">
                 <p className="text-off-white">{title}</p>
                 <p className="text-off-white-light">{text}</p>

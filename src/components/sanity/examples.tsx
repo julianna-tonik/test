@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { ScrollText, SectionLabel } from "./shared";
 import { RequestScene } from "./request-scenes";
 
-const examples = [
+export const examples = [
   {
     label: "NYC Security Summit",
     request:
