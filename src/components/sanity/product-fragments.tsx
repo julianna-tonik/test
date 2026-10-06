@@ -20,23 +20,23 @@ const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "03 Review", title: "Review the live draft", actor: "human", who: "Your team" },
 ];
 
-const BG = "#1c1c1c";
-const GRID = "#424242";
-const LINE = "#383838";
-const SOFT = "#555";
-const MID = "#888";
-const EDGE = "#9a9a9a";
-const HI = "#efefef";
+export const BG = "#1c1c1c";
+export const GRID = "#424242";
+export const LINE = "#383838";
+export const SOFT = "#555";
+export const MID = "#888";
+export const EDGE = "#9a9a9a";
+export const HI = "#efefef";
 const io = [0.65, 0, 0.35, 1] as const;
 
 /* ── timeline engine: each panel plays its keyframes once while its phase is active ── */
 
-type Mode = "before" | "play" | "after";
+export type Mode = "before" | "play" | "after";
 type V = number | string;
-type Track = [number, V][];
-const PanelCtx = createContext<{ mode: Mode; dur: number }>({ mode: "before", dur: 1 });
+export type Track = [number, V][];
+export const PanelCtx = createContext<{ mode: Mode; dur: number }>({ mode: "before", dur: 1 });
 
-const ab = (a: V, b: V, t0: number, t1: number, dur: number): Track => [[0, a], [t0, a], [t1, b], [dur, b]];
+export const ab = (a: V, b: V, t0: number, t1: number, dur: number): Track => [[0, a], [t0, a], [t1, b], [dur, b]];
 
 function useSeq(tracks: Record<string, Track>, linear?: string[]) {
   const { mode, dur } = useContext(PanelCtx);
@@ -57,16 +57,16 @@ function useSeq(tracks: Record<string, Track>, linear?: string[]) {
 }
 
 type GP = React.ComponentProps<typeof motion.g> & { t: Record<string, Track>; linear?: string[] };
-const G = ({ t, linear, ...rest }: GP) => <motion.g {...useSeq(t, linear)} {...rest} />;
+export const G = ({ t, linear, ...rest }: GP) => <motion.g {...useSeq(t, linear)} {...rest} />;
 type RP = React.ComponentProps<typeof motion.rect> & { t: Record<string, Track>; linear?: string[] };
-const R = ({ t, linear, ...rest }: RP) => <motion.rect {...useSeq(t, linear)} {...rest} />;
+export const R = ({ t, linear, ...rest }: RP) => <motion.rect {...useSeq(t, linear)} {...rest} />;
 
-const useDur = () => useContext(PanelCtx).dur;
+export const useDur = () => useContext(PanelCtx).dur;
 
 /* ── primitives ── */
 
-const C = 10;
-const cellsPath = (x: number, y: number, cols: number, rows: number) => {
+export const C = 10;
+export const cellsPath = (x: number, y: number, cols: number, rows: number) => {
   let d = "";
   for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) d += `M${x + k * C + 0.5} ${y + r * C + 0.5}h${C}v${C}h${-C}Z`;
   return d;
@@ -76,7 +76,7 @@ function Node({ x, y, color = HI }: { x: number; y: number; color?: string }) {
   return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill={BG} stroke={color} strokeWidth="0.75" />;
 }
 
-function EdgeBox({ x, y, w, h, dashed, color = HI, nodes = true }: { x: number; y: number; w: number; h: number; dashed?: boolean; color?: string; nodes?: boolean }) {
+export function EdgeBox({ x, y, w, h, dashed, color = HI, nodes = true }: { x: number; y: number; w: number; h: number; dashed?: boolean; color?: string; nodes?: boolean }) {
   const x0 = x + 0.5, y0 = y + 0.5;
   return (
     <>
@@ -86,7 +86,7 @@ function EdgeBox({ x, y, w, h, dashed, color = HI, nodes = true }: { x: number; 
   );
 }
 
-function Header({ children }: { children?: React.ReactNode }) {
+export function Header({ children }: { children?: React.ReactNode }) {
   return (
     <>
       <line x1="0" y1="32.5" x2="320" y2="32.5" stroke={LINE} />
@@ -95,7 +95,7 @@ function Header({ children }: { children?: React.ReactNode }) {
   );
 }
 
-function Cursor() {
+export function Cursor() {
   return <path d="M0 0L11.6 7L6.3 8.1L3.7 13.2Z" fill={HI} stroke={BG} strokeWidth="1" strokeLinejoin="round" />;
 }
 
@@ -151,8 +151,8 @@ function AskPanel() {
 
 /* ── shared page layout: the same page is built in 02 and reviewed in 03 ── */
 
-const PAGE = { x: 40, w: 240 };
-const SLOT = {
+export const PAGE = { x: 40, w: 240 };
+export const SLOT = {
   hero: { y: 48, h: 50 },
   logos: { y: 110, h: 10 },
   cards: { y: 132, h: 40 },
@@ -160,9 +160,9 @@ const SLOT = {
 };
 /** Three cards (7 cells wide) become four (5 cells wide) when AI adds one. */
 const CARDS3 = [40, 125, 210];
-const CARDS4 = [40, 40 + 190 / 3, 40 + 380 / 3, 230];
+export const CARDS4 = [40, 40 + 190 / 3, 40 + 380 / 3, 230];
 const CARD_W3 = 70;
-const CARD_W4 = 50;
+export const CARD_W4 = 50;
 
 /* ── 02 BUILD: the page exists; AI adds a fourth card and the row makes room ── */
 
