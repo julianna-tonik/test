@@ -17,7 +17,7 @@ const io = [0.65, 0, 0.35, 1] as const;
 
 /** One slow move out and back (1.2s each way, 2.2s hold), then rest; icons start a slot apart. */
 const TIMES = [0, 1.2 / PERIOD, 3.4 / PERIOD, 4.6 / PERIOD, 1];
-function Drift({ i, on, to, style, children }: { i: number; on: boolean; to: Record<string, number>; style?: MotionStyle; children: React.ReactNode }) {
+export function Drift({ i, on, to, style, children }: { i: number; on: boolean; to: Record<string, number>; style?: MotionStyle; children: React.ReactNode }) {
   const animate: Record<string, number[]> = {};
   const from: Record<string, number> = {};
   for (const [k, v] of Object.entries(to)) {
