@@ -41,6 +41,40 @@ export const steps: { glyph: string; title: string; text: string; actor: Actor }
   { glyph: "P", title: "Publish when ready.", text: "Your team edits, approves, and publishes as usual.", actor: "human" },
 ];
 
+/** Phones: icon left, text right; the line between steps is solid before a person's step, dashed before AI's. */
+export function HowTimeline() {
+  return (
+    <div className="flex flex-col">
+      {steps.map((s, i) => {
+        const next = steps[i + 1];
+        return (
+          <Reveal key={s.glyph} delay={i * 0.06} className="relative flex gap-5 pb-10 last:pb-0">
+            {next && (
+              <div
+                className="absolute bottom-0 left-[28px] top-[57px] w-px"
+                style={next.actor === "ai" ? { backgroundImage: "linear-gradient(180deg,#888 0 3px,transparent 3px 6px)", backgroundSize: "1px 6px" } : { background: "#4a4a4a" }}
+              />
+            )}
+            <div className="shrink-0">
+              <LetterIcon glyph={s.glyph} index={i + 1} actor={s.actor} />
+            </div>
+            <div className="flex flex-col gap-3 pt-1">
+              <ActorTag
+                actor={s.actor}
+                label={s.actor === "ai" ? "AI" : i === 0 ? "You" : "Your team"}
+                className={s.actor === "ai" ? "text-off-white-light" : "text-off-white"}
+              />
+              <p className="text-xl leading-7 text-off-white">
+                {s.title} <span className="text-off-white-light">{s.text}</span>
+              </p>
+            </div>
+          </Reveal>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Who-does-what bar sitting exactly above the four columns: solid line = person, dashed = AI. */
 const lanes: { label: string; actor: Actor; span: string }[] = [
   { label: "You", actor: "human", span: "md:col-span-1" },
@@ -68,7 +102,11 @@ export function SanityHowItWorks() {
         ))}
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-10 pt-14 sm:grid-cols-2 md:grid-cols-4">
+      <div className="pt-14 sm:hidden">
+        <HowTimeline />
+      </div>
+
+      <div className="hidden w-full grid-cols-1 gap-10 pt-14 sm:grid sm:grid-cols-2 md:grid-cols-4">
         {steps.map((s, i) => (
           <Reveal key={s.glyph} delay={i * 0.08} className="flex flex-col gap-8">
             <LetterIcon glyph={s.glyph} index={i + 1} actor={s.actor} />

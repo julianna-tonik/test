@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { Separator } from "@/components/ui/separator";
-import { ExamplesCompact, ExamplesSwipe, ExamplesTabs, HowGrid, HowSwipe, HowTimeline } from "@/components/sanity/mobile-variants";
+import { ExamplesCompact, ExamplesPinned, ExamplesSwipe, ExamplesTabs, HowGrid, HowSwipe, HowTimeline } from "@/components/sanity/mobile-variants";
 
 export const metadata: Metadata = {
   title: "Mobile — warianty | tonik",
@@ -21,6 +21,7 @@ const groups = [
     variants: [
       { k: "E1", name: "Kompakt", note: "Ta sama kolejność co na desktopie, ale ciaśniej: numer i nazwa, ilustracja, a tekst zaraz pod nią (bez dużej przerwy i bez przygaszania).", C: ExamplesCompact },
       { k: "E2", name: "Przesuwanie", note: "Cztery przykłady jako karty obok siebie; animacja gra na karcie, która jest na ekranie. Cała sekcja zajmuje jeden ekran.", C: ExamplesSwipe },
+      { k: "E4", name: "Przypięty", note: "Twój pomysł: nazwa przykładu z licznikiem 01 / 04 i ilustracja są przypięte u góry i zmieniają się, a pod nimi przewijają się tylko nagłówki i opisy. Krótsza sekcja i jedna ilustracja naraz.", C: ExamplesPinned },
       { k: "E3", name: "Zakładki", note: "Cztery numerowane zakładki z linią postępu; jedna ilustracja i jeden opis naraz, przełącza się samo co 7 s albo po tapnięciu.", C: ExamplesTabs },
     ],
   },
@@ -36,13 +37,13 @@ export default function MobileVariantsPage() {
               <Separator />
               <p className="font-mono text-sm uppercase leading-none tracking-tight">{g.label} — mobile</p>
             </div>
-            <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-3 lg:gap-8">
+            <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-3 lg:gap-8 xl:grid-cols-4">
               {g.variants.map(({ k, name, note, C }) => (
                 <div key={k} className="flex flex-col gap-6">
                   <p className="font-mono text-sm uppercase leading-none tracking-tight">{k} · {name}</p>
                   <p className="max-w-[375px] text-base leading-6 text-off-white-light">{note}</p>
                   {/* phone-width frame with the page's 24px gutter */}
-                  <div className="w-full max-w-[375px] overflow-hidden border border-dark-grey px-6 py-10">
+                  <div className="w-full max-w-[375px] overflow-x-clip border border-dark-grey px-6 py-10">
                     <C />
                   </div>
                 </div>
