@@ -31,8 +31,11 @@ type Track = [number, V][];
 type Box = [x: number, y: number, cols: number, rows: number];
 
 /** a → b between t0 and t1, held until the reset (hidden by the scene fade). */
-/** a → b between t0 and t1; at the end of the loop it glides back to a (no hard cut). */
-const ev = (a: V, b: V, t0: number, t1: number): Track => [[0, a], [t0, a], [t1, b], [6.3, b], [6.9, a], [D, a]];
+/** a → b between t0 and t1; at the end of the loop it returns to a (while moved things are hidden, see G). */
+const ev = (a: V, b: V, t0: number, t1: number): Track => [[0, a], [t0, a], [t1, b], [6.25, b], [6.5, a], [D, a]];
+/** Things that moved switch off where they ended, go back unseen, and switch on again at their start. */
+const HIDE_RESET: Track = [[0, 1], [6.05, 1], [6.25, 0], [6.55, 0], [6.85, 1], [D, 1]];
+const MOVES = ["x", "y", "scale", "scaleX", "scaleY"];
 /** Fade in at t0, out at t1. */
 const pulse = (t0: number, t1: number, v: V = 1, a: V = 0): Track => [[0, a], [t0, a], [t0 + 0.3, v], [t1, v], [t1 + 0.3, a], [D, a]];
 /** Visible from t0 until the reset. */
@@ -60,7 +63,8 @@ function useLoop(tracks: Record<string, Track>) {
 
 type GProps = React.ComponentProps<typeof motion.g> & { t: Record<string, Track> };
 function G({ t, ...rest }: GProps) {
-  return <motion.g {...useLoop(t)} {...rest} />;
+  const moves = !t.opacity && Object.entries(t).some(([k, pts]) => MOVES.includes(k) && pts.some(([, v]) => v !== pts[0][1]));
+  return <motion.g {...useLoop(moves ? { ...t, opacity: HIDE_RESET } : t)} {...rest} />;
 }
 type RProps = React.ComponentProps<typeof motion.rect> & { t: Record<string, Track> };
 function R({ t, ...rest }: RProps) {
@@ -143,8 +147,8 @@ function Lock({ x, y }: { x: number; y: number }) {
   );
 }
 
-/** End of loop: the scene dims a little while everything glides back to its start. */
-const FADE: Track = [[0, 1], [6.2, 1], [6.5, 0.45], [6.85, 0.45], [D, 1]];
+/** The scene itself stays on; what changed switches off on its own at the end of the loop. */
+const FADE: Track = [[0, 1], [D, 1]];
 
 /* ───────────────────────── 01 · assembled from what you already have ───────────────────────── */
 
@@ -479,13 +483,13 @@ function Edit({ col, t }: { col: number; t: number }) {
   const x = col * M + 5;
   return (
     <>
-      <G t={{ opacity: [[0, 0], [t, 0], [t + 0.25, 1], [t + 1.1, 1], [t + 1.5, 0.35], [6.3, 0.35], [6.9, 0], [D, 0]] }}>
+      <G t={{ opacity: [[0, 0], [t, 0], [t + 0.25, 1], [t + 1.1, 1], [t + 1.5, 0.35], [6.05, 0.35], [6.35, 0], [D, 0]] }}>
         <rect x={x} y={27} width={M - 9} height={M - 9} fill={SEL} />
       </G>
       <G t={{ y: ev(0, 90, t + 0.45, t + 1.05), opacity: [[0, 0], [t + 0.4, 0], [t + 0.5, 1], [t + 1.0, 1], [t + 1.1, 0], [D, 0]] }}>
         <rect x={x} y={27} width={M - 9} height={M - 9} fill={SEL} />
       </G>
-      <G t={{ opacity: [[0, 0], [t + 1.0, 0], [t + 1.1, 1], [t + 1.6, 1], [t + 2.0, 0.35], [6.3, 0.35], [6.9, 0], [D, 0]] }}>
+      <G t={{ opacity: [[0, 0], [t + 1.0, 0], [t + 1.1, 1], [t + 1.6, 1], [t + 2.0, 0.35], [6.05, 0.35], [6.35, 0], [D, 0]] }}>
         <rect x={x} y={117} width={M - 9} height={M - 9} fill={SEL} />
       </G>
     </>
@@ -522,7 +526,7 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
     <Ctx.Provider value={{ on, reduce }}>
       <svg aria-hidden ref={ref} viewBox={narrow ? "0 0 301 196" : "0 0 620 196"} fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
         {/* labels: "live" moves from Webflow to Sanity at the cutover */}
-        <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.3, 0.4], [6.9, 1], [D, 1]] }}>
+        <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.3, 0.4], [6.7, 1], [D, 1]] }}>
           <text x="0" y="11" fill={MUTED} fontSize="11">WEBFLOW</text>
         </G>
         <G t={{ opacity: ev(1, 0, 5.4, 5.7) }}>
@@ -534,7 +538,7 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
         </G>
 
         {/* Webflow lane — dims after the cutover */}
-        <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.3, 0.4], [6.9, 1], [D, 1]] }}>
+        <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.3, 0.4], [6.7, 1], [D, 1]] }}>
           <rect x="0.5" y="22.5" width={N * M} height={2 * M} fill={BG} />
           <path d={mPath(0, 22, N, 2)} stroke={GRID} fill="none" />
         </G>
