@@ -75,7 +75,13 @@ export function SanityHero() {
         </motion.div>
       </div>
 
-      <Ticker />
+      {/* phones: logos a third closer together so more of them show at once */}
+      <div className="w-full md:hidden">
+        <Ticker gap={7} />
+      </div>
+      <div className="hidden w-full md:block">
+        <Ticker />
+      </div>
       <SanityStickyHeader />
     </section>
   );
