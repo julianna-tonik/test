@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { easeOut } from "./shared";
+import { IdScope, useScopedId } from "./id-scope";
 
 /**
  * LITERAL VERSION (founder-readable): app windows with names, real copy, statuses and numbers,
@@ -193,7 +194,8 @@ function SmallLock({ x, y, color = "#9a9a9a" }: { x: number; y: number; color?: 
 const HI2 = "#efefef";
 
 /** Text that types in left → right (clip grows). */
-function Typed({ id, x, y, w, t0, t1, children, size = 9, color = INK }: { id: string; x: number; y: number; w: number; t0: number; t1: number; children: string; size?: number; color?: string }) {
+function Typed({ id: local, x, y, w, t0, t1, children, size = 9, color = INK }: { id: string; x: number; y: number; w: number; t0: number; t1: number; children: string; size?: number; color?: string }) {
+  const id = useScopedId(local);
   return (
     <>
       <defs>
@@ -407,7 +409,7 @@ function SceneReport({ narrow }: SceneProps) {
       <G t={{ opacity: appear(2.2) }}>
         <Block x={X} y={176.5} w={W} h={34} ai={aiWork(2.2, 2.9)}>
           <rect x={X + 13.5} y={186} width="166" height="16" stroke="#555" fill="none" />
-          <G t={{ opacity: ev(1, 0, 3.0, 3.1) }}>
+          <G t={{ opacity: ev(1, 0, 2.7, 3.05) }}>
             <Sans x={X + 20} y={196.5} size={7} color="#777">Work email</Sans>
           </G>
           <Typed id="rep-mail" x={X + 20} y={196.5} w={70} t0={3.1} t1={3.7} size={7}>jane@acme.com</Typed>
@@ -539,9 +541,11 @@ function Variant({ x, y, w, b, at }: { x: number; y: number; w: number; b?: bool
         <line x1={x} y1={y + 32.5} x2={x + w} y2={y + 32.5} stroke="#333" />
       </Block>
       <Block x={px} y={py} w={pw} h={55}>
-        <Sans x={px + 13} y={py + 20} size={11}>{v.head}</Sans>
-        <rect x={px + 13} y={py + 28} width={v.cw} height="14" fill={BTN} />
-        <Mono x={px + 21} y={py + 37} size={5.5} color={HI2}>{v.cta}</Mono>
+        <Typed id={b ? "ab-b" : "ab-a"} x={px + 13} y={py + 20} w={150} t0={at + 0.4} t1={at + 1.0} size={11}>{v.head}</Typed>
+        <G t={{ opacity: show(at + 1.1, 0.3), y: ev(4, 0, at + 1.1, at + 1.4) }}>
+          <rect x={px + 13} y={py + 28} width={v.cw} height="14" fill={BTN} />
+          <Mono x={px + 21} y={py + 37} size={5.5} color={HI2}>{v.cta}</Mono>
+        </G>
       </Block>
       <Mono x={px} y={y + 116} size={6}>Registrations</Mono>
       <Count x={px} y={y + 135} t0={2.2} t1={5.0} values={v.counts} size={15} color={b ? SEL : INK} />
@@ -580,17 +584,20 @@ export const sceneAspect = (index: number, narrow: boolean) => {
   return h / w;
 };
 
-export function RequestScene({ index, active, snapshot, fit }: { index: number; active: boolean; snapshot?: boolean; fit?: boolean }) {
+export function RequestScene({ index, active, snapshot, fit, scope = "", layout }: { index: number; active: boolean; snapshot?: boolean; fit?: boolean; scope?: string; layout?: "wide" | "narrow" }) {
   const reduce = !!useReducedMotion() || !!snapshot;
-  const narrow = useNarrow();
+  const auto = useNarrow();
+  const narrow = layout ? layout === "narrow" : auto;
   const { Scene, l } = SCENES[index];
   const [w, h] = l[narrow ? "narrow" : "wide"].vb;
   return (
+    <IdScope.Provider value={`${scope}s${index}-`}>
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
       <svg key={narrow ? "n" : "w"} aria-hidden viewBox={`0 0 ${w} ${h}`} fill="none" className={fit ? "absolute inset-0 h-full w-full overflow-visible" : "block h-auto w-full overflow-visible"}>
         <Scene narrow={narrow} />
       </svg>
     </Ctx.Provider>
+    </IdScope.Provider>
   );
 }
 

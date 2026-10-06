@@ -36,19 +36,19 @@ export function SanityMigration() {
             <p className="text-base leading-6 text-off-white-light">The same workflow can support more of your content operations.</p>
           </div>
           <div className="flex flex-row items-start gap-6 md:flex-col">
-            <div className="flex size-14 shrink-0 items-center justify-center md:aspect-[4/3] md:size-auto md:w-full md:border md:border-dark-grey">
+            <div className="flex size-20 shrink-0 items-center justify-center md:aspect-[4/3] md:size-auto md:w-full md:border md:border-dark-grey">
               <WhereIcon i={0} />
             </div>
             <p className="text-base leading-6">Create pages from familiar tools. <span className="text-off-white-light">Start a request in Slack, Claude, Codex, or another tool.</span></p>
           </div>
           <div className="flex flex-row items-start gap-6 md:flex-col">
-            <div className="flex size-14 shrink-0 items-center justify-center md:aspect-[4/3] md:size-auto md:w-full md:border md:border-dark-grey">
+            <div className="flex size-20 shrink-0 items-center justify-center md:aspect-[4/3] md:size-auto md:w-full md:border md:border-dark-grey">
               <WhereIcon i={1} />
             </div>
             <p className="text-base leading-6">Handle repetitive work. <span className="text-off-white-light">Manage translations, metadata, and bulk updates.</span></p>
           </div>
           <div className="flex flex-row items-start gap-6 md:flex-col">
-            <div className="flex size-14 shrink-0 items-center justify-center md:aspect-[4/3] md:size-auto md:w-full md:border md:border-dark-grey">
+            <div className="flex size-20 shrink-0 items-center justify-center md:aspect-[4/3] md:size-auto md:w-full md:border md:border-dark-grey">
               <WhereIcon i={2} />
             </div>
             <p className="text-base leading-6">Connect external systems. <span className="text-off-white-light">Add analytics, CRM, translation, or internal tools.</span></p>

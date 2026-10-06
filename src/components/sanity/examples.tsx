@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { cn } from "@/lib/utils";
 import { ScrollText, SectionLabel } from "./shared";
-import { RequestScene, sceneAspect, useNarrow } from "./request-scenes";
+import { RequestScene } from "./request-scenes";
 import { examples } from "./examples-data";
 import { ExamplesPinned } from "./examples-pinned";
 
@@ -12,12 +12,15 @@ import { ExamplesPinned } from "./examples-pinned";
 
 const progressValues: Record<number, number> = { [-1]: 0, 0: 0.11, 1: 0.37, 2: 0.63, 3: 0.89, 4: 1 };
 
+/** Phones: NYC, report and homepage keep their windows side by side; the A/B test stacks. One box height for all. */
+const PINNED_LAYOUT: ("wide" | "narrow")[] = ["wide", "wide", "wide", "narrow"];
+const PINNED_ASPECT = 0.62;
+
 export function SanityExamples() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [active, setActive] = useState(-1);
-  const narrow = useNarrow();
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start center", "end center"] });
   useMotionValueEvent(scrollYProgress, "change", (p) => {
@@ -38,7 +41,7 @@ export function SanityExamples() {
 
       {/* phones: the illustration and a 01 / 04 counter stay pinned, only the requests scroll */}
       <div className="md:hidden">
-        <ExamplesPinned aspect={(i) => sceneAspect(i, narrow)} />
+        <ExamplesPinned aspect={() => PINNED_ASPECT} layout={PINNED_LAYOUT} />
       </div>
 
       <div className="hidden flex-col gap-10 md:flex md:flex-row">
@@ -73,7 +76,7 @@ export function SanityExamples() {
             >
               {/* Vibe Fixer "What you get" anatomy: illustration full width, text centred below */}
               <div className="flex w-full items-center">
-                <RequestScene index={i} active={active === i} />
+                <RequestScene index={i} active={active === i} scope="d" />
               </div>
               <div className="flex justify-center">
                 <div className="flex max-w-lg flex-col gap-10">

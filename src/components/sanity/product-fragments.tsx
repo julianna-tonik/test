@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Actor, ActorTag } from "./actor";
+import { IdScope, useScopedId } from "./id-scope";
 
 /**
  * Hero visual: three small product fragments (Ask → Build → Review), drawn as
@@ -143,8 +144,9 @@ export function SwitchHeader({ t }: { t: number }) {
 }
 
 /** Page frame that lights up once live, plus a slow sweep across the given boxes. */
-export function GoLive({ id, t, boxes, frame = [36, 44, 248, 174] }: { id: string; t: number; boxes: [number, number, number, number][]; frame?: [number, number, number, number] }) {
+export function GoLive({ id: local, t, boxes, frame = [36, 44, 248, 174] }: { id: string; t: number; boxes: [number, number, number, number][]; frame?: [number, number, number, number] }) {
   const d = useDur();
+  const id = useScopedId(local);
   return (
     <>
       <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={frame[0] + 0.5} y={frame[1] + 0.5} width={frame[2]} height={frame[3]} fill="none" />
@@ -342,8 +344,9 @@ function SansT({ x, y, children, color = "#cfcfcf", size = 9 }: { x: number; y: 
   );
 }
 /** Text typed in left → right inside a growing clip. */
-function TypedT({ id, x, y, w, t0, t1, children, size = 9, color }: { id: string; x: number; y: number; w: number; t0: number; t1: number; children: string; size?: number; color?: string }) {
+function TypedT({ id: local, x, y, w, t0, t1, children, size = 9, color }: { id: string; x: number; y: number; w: number; t0: number; t1: number; children: string; size?: number; color?: string }) {
   const d = useDur();
+  const id = useScopedId(local);
   return (
     <>
       <defs>
@@ -638,11 +641,13 @@ export function ProductFragments() {
         return (
           <Step key={i} index={idx} phase={reduce ? 3 : phase} cycle={cycle}>
             <div className={cn("relative aspect-[4/3] w-full border bg-[#1c1c1c] transition-colors duration-700", !reduce && phase === idx ? "border-[#4a4a4a]" : "border-dark-grey")}>
+              <IdScope.Provider value={`d${idx}-`}>
               <PanelCtx.Provider value={{ mode, dur: PHASE_S[idx] }}>
                 <svg aria-hidden viewBox="0 0 320 240" fill="none" className={cn("absolute inset-0 h-full w-full transition-opacity duration-700", mode === "play" || reduce ? "opacity-100" : "opacity-45")}>
                   <Panel />
                 </svg>
               </PanelCtx.Provider>
+              </IdScope.Provider>
             </div>
           </Step>
         );

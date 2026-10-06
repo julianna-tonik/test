@@ -40,17 +40,21 @@ const icons: ((on: boolean) => React.ReactNode)[] = [
       </Drift>
     </>
   ),
-  // Connect external systems — the site wired to CRM and analytics
+  // Connect external systems — the CMS wired to CRM, analytics, translation and an internal API
   (on) => (
     <>
-      <rect x="28.5" y="30.5" width="26" height="22" stroke={G} />
-      <text x="33" y="44" fill={T} style={mono}>CMS</text>
-      <path d="M41.5 30V18M41.5 53V66" stroke={D} />
-      <rect x="29.5" y="6.5" width="24" height="12" stroke={D} />
-      <text x="33" y="15" fill="#555" style={mono}>CRM</text>
-      <Drift i={4} on={on} to={{ y: 5 }}>
-        <rect x="29.5" y="65.5" width="24" height="12" stroke={D} />
-        <text x="35.5" y="74" fill="#555" style={mono}>GA4</text>
+      <rect x="29.5" y="33.5" width="26" height="18" stroke={G} />
+      <text x="33.5" y="45" fill={T} style={mono}>CMS</text>
+      <path d="M42.5 33V22M42.5 52V63M29 42.5H24M56 42.5H61" stroke={D} />
+      <rect x="30.5" y="9.5" width="24" height="12" stroke={D} />
+      <text x="34" y="18" fill="#555" style={mono}>CRM</text>
+      <rect x="1.5" y="36.5" width="22" height="12" stroke={D} />
+      <text x="4" y="45" fill="#555" style={mono}>I18N</text>
+      <rect x="61.5" y="36.5" width="21" height="12" stroke={D} />
+      <text x="65" y="45" fill="#555" style={mono}>API</text>
+      <Drift i={4} on={on} to={{ y: 4 }}>
+        <rect x="30.5" y="63.5" width="24" height="12" stroke={D} />
+        <text x="35.5" y="72" fill="#555" style={mono}>GA4</text>
       </Drift>
     </>
   ),
