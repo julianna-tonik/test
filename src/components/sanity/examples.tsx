@@ -87,19 +87,22 @@ export function SanityExamples() {
             <div
               key={e.label}
               ref={(el) => { sectionRefs.current[i] = el; }}
-              className={cn("grid grid-cols-1 items-center gap-10 transition-opacity duration-700 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12", active === i || active === -1 && i === 0 ? "opacity-100" : "opacity-40")}
+              className={cn("flex flex-col gap-10 transition-opacity duration-700 md:gap-20", active === i || active === -1 && i === 0 ? "opacity-100" : "opacity-40")}
             >
-              <div className="flex items-center">
+              {/* Vibe Fixer "What you get" anatomy: illustration full width, text centred below */}
+              <div className="flex w-full items-center">
                 <RequestScene index={i} active={active === i} />
               </div>
-              <div className="flex flex-col gap-6">
-                <p className="text-2xl text-off-white md:text-3xl">{e.label}</p>
-                <p className="text-base leading-6 text-off-white-light">{e.request}</p>
-                <List>
-                  {e.result.map((r) => (
-                    <ListItem key={r}>{r}</ListItem>
-                  ))}
-                </List>
+              <div className="flex justify-center">
+                <div className="flex max-w-lg flex-col gap-6">
+                  <p className="text-2xl text-off-white md:text-3xl">{e.label}</p>
+                  <p className="text-base leading-6 text-off-white-light">{e.request}</p>
+                  <List>
+                    {e.result.map((r) => (
+                      <ListItem key={r}>{r}</ListItem>
+                    ))}
+                  </List>
+                </div>
               </div>
             </div>
           ))}

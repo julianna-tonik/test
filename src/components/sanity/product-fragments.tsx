@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { createContext, useContext, useEffect, useId, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { easeOut } from "./shared";
 import { Actor, ActorTag } from "./actor";
 
-const REQUEST =
-  "Create an NYC version of our event page for enterprise security teams. Reuse the existing template and customer stories.";
-const SECTIONS = ["Hero", "Logo row", "Stories", "CTA"];
+/**
+ * Hero visual: three small product fragments (Ask → Build → Review), drawn as
+ * graphics, not UI copy. Same language as the example scenes:
+ * grid blocks, dashed edge + nodes = AI at work, solid edge + cursor = a person.
+ */
 
 type Phase = 0 | 1 | 2;
-const PHASE_MS: Record<Phase, number> = { 0: 3800, 1: 3600, 2: 4600 };
+const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 4.8 };
 
 const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
@@ -19,248 +20,307 @@ const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "03 Review", title: "Review the live draft", actor: "human", who: "Your team" },
 ];
 
-function Check({ size = 10, color = "#888888" }: { size?: number; color?: string }) {
+const BG = "#1c1c1c";
+const GRID = "#424242";
+const LINE = "#383838";
+const SOFT = "#555";
+const MID = "#888";
+const EDGE = "#9a9a9a";
+const HI = "#efefef";
+const io = [0.65, 0, 0.35, 1] as const;
+
+/* ── timeline engine: each panel plays its keyframes once while its phase is active ── */
+
+type Mode = "before" | "play" | "after";
+type V = number | string;
+type Track = [number, V][];
+const PanelCtx = createContext<{ mode: Mode; dur: number }>({ mode: "before", dur: 1 });
+
+const ab = (a: V, b: V, t0: number, t1: number, dur: number): Track => [[0, a], [t0, a], [t1, b], [dur, b]];
+
+function useSeq(tracks: Record<string, Track>, linear?: string[]) {
+  const { mode, dur } = useContext(PanelCtx);
+  const initial: Record<string, V> = {};
+  const animate: Record<string, V | V[]> = {};
+  const transition: Record<string, object> = {};
+  for (const [k, pts] of Object.entries(tracks)) {
+    initial[k] = mode === "after" ? pts[pts.length - 1][1] : pts[0][1];
+    if (mode === "play") {
+      animate[k] = pts.map((p) => p[1]);
+      transition[k] = { duration: dur, times: pts.map((p) => p[0] / dur), ease: linear?.includes(k) ? "linear" : io };
+    } else {
+      animate[k] = mode === "after" ? pts[pts.length - 1][1] : pts[0][1];
+      transition[k] = { duration: 0.5, ease: io };
+    }
+  }
+  return { initial, animate, transition };
+}
+
+type GP = React.ComponentProps<typeof motion.g> & { t: Record<string, Track>; linear?: string[] };
+const G = ({ t, linear, ...rest }: GP) => <motion.g {...useSeq(t, linear)} {...rest} />;
+type RP = React.ComponentProps<typeof motion.rect> & { t: Record<string, Track>; linear?: string[] };
+const R = ({ t, linear, ...rest }: RP) => <motion.rect {...useSeq(t, linear)} {...rest} />;
+
+const useDur = () => useContext(PanelCtx).dur;
+
+/* ── primitives ── */
+
+const C = 10;
+const cellsPath = (x: number, y: number, cols: number, rows: number) => {
+  let d = "";
+  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) d += `M${x + k * C + 0.5} ${y + r * C + 0.5}h${C}v${C}h${-C}Z`;
+  return d;
+};
+
+function Node({ x, y, color = HI }: { x: number; y: number; color?: string }) {
+  return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill={BG} stroke={color} strokeWidth="0.75" />;
+}
+
+function EdgeBox({ x, y, w, h, dashed, color = HI, nodes = true }: { x: number; y: number; w: number; h: number; dashed?: boolean; color?: string; nodes?: boolean }) {
+  const x0 = x + 0.5, y0 = y + 0.5;
   return (
-    <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
-      <path d="M2.8 7L5.6 9.8L11.2 4.2" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <>
+      <rect x={x0} y={y0} width={w} height={h} stroke={color} strokeWidth="1" strokeDasharray={dashed ? "4 3" : undefined} fill="none" />
+      {nodes && [[x0, y0], [x0 + w, y0], [x0, y0 + h], [x0 + w, y0 + h]].map(([a, b], i) => <Node key={i} x={a} y={b} color={color} />)}
+    </>
   );
 }
 
-const mono = "font-mono text-xs uppercase leading-3 tracking-tight";
-
-function Panel({ active, head, meta, children }: { active: boolean; head: string; meta: React.ReactNode; children: React.ReactNode }) {
+function Header({ children }: { children?: React.ReactNode }) {
   return (
-    <div className={cn("relative flex h-[320px] flex-col border bg-[#1c1c1c] transition-colors duration-700", active ? "border-[#4a4a4a]" : "border-dark-grey")}>
-      <div className="flex items-center gap-2 border-b border-dark-grey px-4 py-3 text-off-white-light">
-        <p className={mono}>{head}</p>
-        <span className="flex-1" />
-        {meta}
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">{children}</div>
-    </div>
+    <>
+      <line x1="0" y1="32.5" x2="320" y2="32.5" stroke={LINE} />
+      {children}
+    </>
   );
 }
 
 function Cursor() {
+  return <path d="M0 0L11.6 7L6.3 8.1L3.7 13.2Z" fill={HI} stroke={BG} strokeWidth="1" strokeLinejoin="round" />;
+}
+
+/* ── 01 ASK: a person writes a request; AI picks it up ── */
+
+function AskPanel() {
+  const d = useDur();
+  const caretX: Track = [[0, 24], [0.3, 24], [1.4, 214], [1.42, 24], [2.1, 134], [d, 134]];
+  const caretY: Track = [[0, 190], [1.41, 190], [1.42, 202], [d, 202]];
   return (
-    <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
-      <path d="M1.5 1.5L16 10.2L9.4 11.6L6.2 18L1.5 1.5Z" fill="#EFEFEF" stroke="#212121" strokeWidth="1.2" strokeLinejoin="round" />
-    </svg>
+    <>
+      <Header>
+        {/* chat icon */}
+        <path d="M16.5 11.5h14v10h-8l-3 3v-3h-3z" stroke={MID} strokeWidth="0.75" fill="none" />
+      </Header>
+
+      {/* composer: typed as placeholder lines */}
+      <rect x="12.5" y="178.5" width="295" height="46" stroke={LINE} fill="none" />
+      <G t={{ opacity: ab(1, 0, 2.5, 2.7, d) }}>
+        <R t={{ scaleX: ab(0, 1, 0.3, 1.4, d) }} linear={["scaleX"]} x={24} y={192} width={190} height={5} fill="#5a5a5a" style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }} />
+        <R t={{ scaleX: ab(0, 1, 1.42, 2.1, d) }} linear={["scaleX"]} x={24} y={204} width={110} height={5} fill="#5a5a5a" style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }} />
+        <R t={{ x: caretX, y: caretY, opacity: [[0, 0], [0.2, 1], [2.2, 1], [2.3, 0], [d, 0]] }} linear={["x"]} x={0} y={0} width={1} height={9} fill={HI} />
+      </G>
+      {/* send (icon only) */}
+      <G t={{ opacity: [[0, 0.45], [2.2, 0.45], [2.35, 1], [2.9, 1], [3.2, 0.45], [d, 0.45]] }}>
+        <rect x="278.5" y="190.5" width="20" height="20" stroke={HI} fill="none" />
+        <path d="M288.5 205v-9M284.5 199.5l4-4 4 4" stroke={HI} strokeWidth="1" fill="none" />
+      </G>
+
+      {/* the sent request, in the thread — a person (solid mark) */}
+      <G t={{ opacity: ab(0, 1, 2.5, 2.9, d), y: ab(14, 0, 2.5, 3.0, d) }}>
+        <rect x="96.5" y="52.5" width="200" height="42" stroke={SOFT} fill="#222" />
+        <rect x="108" y="64" width="170" height="5" fill="#777" />
+        <rect x="108" y="76" width="100" height="5" fill="#777" />
+        <circle cx="304" cy="99" r="3" fill={HI} />
+      </G>
+
+      {/* AI picks it up — dashed mark + working dots */}
+      <G t={{ opacity: ab(0, 1, 3.0, 3.3, d) }}>
+        <circle cx="24" cy="120" r="4.5" stroke={MID} strokeDasharray="1.6 1.6" fill="none" />
+        {[0, 1, 2].map((i) => (
+          <R
+            key={i}
+            t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }}
+            x={36 + i * 8}
+            y={118}
+            width="4"
+            height="4"
+            fill={MID}
+          />
+        ))}
+      </G>
+    </>
   );
 }
 
-/** Three small Sanity UI fragments (Ask → Build → Review) — the hero visual. */
+/* ── 02 BUILD: AI assembles the page from approved blocks ── */
+
+const BLOCKS: { x: number; y: number; cols: number; rows: number }[][] = [
+  [{ x: 40, y: 48, cols: 24, rows: 1 }],
+  [{ x: 40, y: 64, cols: 24, rows: 5 }],
+  [{ x: 40, y: 122, cols: 24, rows: 1 }],
+  [{ x: 40, y: 140, cols: 7, rows: 4 }, { x: 125, y: 140, cols: 7, rows: 4 }, { x: 210, y: 140, cols: 7, rows: 4 }],
+  [{ x: 40, y: 188, cols: 24, rows: 3 }],
+];
+
+function BuildPanel() {
+  const d = useDur();
+  return (
+    <>
+      <Header>
+        <path d="M16.5 11.5h5v5h-5zM23.5 11.5h5v5h-5zM16.5 18.5h5v5h-5zM23.5 18.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
+        {BLOCKS.map((_, i) => (
+          <g key={i}>
+            <rect x={252.5 + i * 10} y="13.5" width="6" height="6" stroke={SOFT} fill="none" />
+            <R t={{ opacity: ab(0, 1, 0.75 + i * 0.6, 0.85 + i * 0.6, d) }} x={254 + i * 10} y={15} width="3" height="3" fill={MID} />
+          </g>
+        ))}
+      </Header>
+      <rect x="36.5" y="44.5" width="248" height="182" stroke="#2e2e2e" fill="none" />
+      {BLOCKS.map((group, i) => {
+        const s = 0.25 + i * 0.6;
+        return (
+          <G key={i} t={{ opacity: ab(0, 1, s, s + 0.25, d), y: ab(-10, 0, s, s + 0.5, d) }}>
+            {group.map((b, j) => (
+              <g key={j}>
+                <rect x={b.x + 0.5} y={b.y + 0.5} width={b.cols * C} height={b.rows * C} fill={BG} />
+                <path d={cellsPath(b.x, b.y, b.cols, b.rows)} stroke={GRID} fill="none" />
+                <G t={{ opacity: [[0, 0], [s, 0], [s + 0.15, 1], [s + 0.7, 1], [s + 0.9, 0], [d, 0]] }}>
+                  <EdgeBox x={b.x} y={b.y} w={b.cols * C} h={b.rows * C} dashed />
+                </G>
+                <G t={{ opacity: ab(0, 1, s + 0.7, s + 0.9, d) }}>
+                  <rect x={b.x + 0.5} y={b.y + 0.5} width={b.cols * C} height={b.rows * C} stroke={EDGE} fill="none" />
+                </G>
+              </g>
+            ))}
+          </G>
+        );
+      })}
+    </>
+  );
+}
+
+/* ── 03 REVIEW: a person edits, then switches the page live ── */
+
+function ReviewPanel() {
+  const d = useDur();
+  const id = useId().replace(/:/g, "");
+  return (
+    <>
+      <Header>
+        {/* address bar */}
+        <rect x="16.5" y="10.5" width="120" height="12" stroke={LINE} fill="none" />
+        <rect x="23" y="15" width="56" height="3" fill="#444" />
+        {/* draft → live switch: a state, not a button */}
+        <G t={{ opacity: ab(1, 0, 3.5, 3.7, d) }}>
+          <text x="238" y="19.5" fill={MID} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>DRAFT</text>
+        </G>
+        <G t={{ opacity: ab(0, 1, 3.6, 3.9, d) }}>
+          <text x="245" y="19.5" fill={HI} fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>LIVE</text>
+        </G>
+        <rect x="272.5" y="9.5" width="32" height="14" stroke={SOFT} fill="none" />
+        <R t={{ opacity: ab(0, 1, 3.5, 3.85, d) }} x={273} y={10} width={31} height={13} fill="#333" />
+        <R t={{ x: ab(0, 16, 3.45, 3.85, d), fill: ab(MID, HI, 3.45, 3.85, d) }} x={275} y={12} width={10} height={9} />
+      </Header>
+
+      {/* the page from step 02, rendered */}
+      <G t={{ opacity: ab(0, 1, 0, 0.5, d) }}>
+        <rect x="40.5" y="48.5" width="240" height="10" fill="#242424" />
+        <rect x="46" y="52" width="24" height="3" fill="#555" />
+        <rect x="40.5" y="64.5" width="240" height="50" fill="#262626" stroke="#333" />
+        <R t={{ scaleX: ab(1, 0.72, 1.75, 2.2, d) }} x={52} y={76} width={150} height={6} fill="#9a9a9a" style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }} />
+        <rect x="52" y="88" width="96" height="6" fill="#9a9a9a" />
+        <rect x="52" y="102" width="60" height="3" fill="#555" />
+        {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={52 + i * 46} y="124" width="26" height="6" fill="#3a3a3a" />)}
+        {[40, 125, 210].map((x) => (
+          <g key={x}>
+            <rect x={x + 0.5} y="140.5" width="70" height="40" fill="#242424" stroke="#333" />
+            <rect x={x + 7} y="160" width="44" height="3" fill="#555" />
+            <rect x={x + 7} y="168" width="30" height="3" fill="#444" />
+          </g>
+        ))}
+        <rect x="40.5" y="188.5" width="240" height="30" fill="#262626" stroke="#333" />
+        <rect x="52" y="201" width="80" height="4" fill="#666" />
+        <rect x="234" y="198" width="36" height="10" fill="#444" />
+      </G>
+
+      {/* the person's edit: solid edge on the headline */}
+      <G t={{ opacity: [[0, 0], [1.55, 0], [1.65, 1], [2.6, 1], [2.9, 0], [d, 0]] }}>
+        <EdgeBox x={47} y={71} w={160} h={28} />
+      </G>
+
+      {/* goes live: light sweep across the page */}
+      <defs>
+        <linearGradient id={`hg${id}`}>
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <mask id={`hm${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="320" height="240">
+          <R t={{ x: ab(-120, 340, 3.8, 4.6, d) }} y={40} width={110} height={200} fill={`url(#hg${id})`} />
+        </mask>
+      </defs>
+      <g mask={`url(#hm${id})`} stroke="#bdbdbd" fill="none">
+        <rect x="40.5" y="48.5" width="240" height="10" />
+        <rect x="40.5" y="64.5" width="240" height="50" />
+        {[40, 125, 210].map((x) => <rect key={x} x={x + 0.5} y="140.5" width="70" height="40" />)}
+        <rect x="40.5" y="188.5" width="240" height="30" />
+      </g>
+
+      {/* the person: cursor goes to the headline, edits, then flips the switch */}
+      <G
+        t={{
+          x: [[0, 300], [0.6, 300], [1.5, 150], [2.4, 150], [3.3, 292], [d, 292]],
+          y: [[0, 236], [0.6, 236], [1.5, 84], [2.4, 84], [3.3, 17], [d, 17]],
+          opacity: [[0, 0], [0.6, 0], [0.8, 1], [4.1, 1], [4.5, 0], [d, 0]],
+          scale: [[0, 1], [1.5, 1], [1.58, 0.82], [1.68, 1], [3.35, 1], [3.43, 0.82], [3.53, 1], [d, 1]],
+        }}
+      >
+        <Cursor />
+      </G>
+    </>
+  );
+}
+
+const PANELS = [AskPanel, BuildPanel, ReviewPanel];
+
 export function ProductFragments() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { margin: "-10% 0px" });
   const reduce = useReducedMotion();
   const [phase, setPhase] = useState<Phase>(0);
   const [cycle, setCycle] = useState(0);
-  const [typed, setTyped] = useState(0);
-  const [sent, setSent] = useState(false);
-  const [rows, setRows] = useState(0);
-  const [blocks, setBlocks] = useState(0);
-  const [cursor, setCursor] = useState<"off" | "moving" | "click" | "done">("off");
 
-  const reset = () => { setTyped(0); setSent(false); setRows(0); setBlocks(0); setCursor("off"); };
-
-  // phase timeline
   useEffect(() => {
-    if (reduce) {
-      setTyped(REQUEST.length); setSent(true); setRows(SECTIONS.length); setBlocks(4); setCursor("done"); setPhase(2);
-      return;
-    }
-    if (!inView) return;
+    if (reduce || !inView) return;
     const t = setTimeout(() => {
-      if (phase === 2) { reset(); setCycle((c) => c + 1); setPhase(0); }
+      if (phase === 2) { setCycle((c) => c + 1); setPhase(0); }
       else setPhase((phase + 1) as Phase);
-    }, PHASE_MS[phase]);
+    }, PHASE_S[phase] * 1000 + 300);
     return () => clearTimeout(t);
   }, [phase, inView, reduce]);
 
-  // 01: typing, then "sent to Sanity"
-  useEffect(() => {
-    if (reduce || phase !== 0 || !inView) return;
-    if (typed >= REQUEST.length) {
-      const t = setTimeout(() => setSent(true), 450);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => setTyped((n) => Math.min(REQUEST.length, n + 2)), 26);
-    return () => clearTimeout(t);
-  }, [typed, phase, inView, reduce]);
-
-  // 02: sections come in from the approved library
-  useEffect(() => {
-    if (reduce || phase !== 1 || rows >= SECTIONS.length) return;
-    const t = setTimeout(() => setRows((n) => n + 1), rows === 0 ? 250 : 650);
-    return () => clearTimeout(t);
-  }, [rows, phase, reduce]);
-
-  // 03: preview builds, then a person clicks Publish
-  useEffect(() => {
-    if (reduce || phase !== 2) return;
-    if (blocks < 4) {
-      const t = setTimeout(() => setBlocks((n) => n + 1), blocks === 0 ? 200 : 300);
-      return () => clearTimeout(t);
-    }
-    const next = { off: ["moving", 300], moving: ["click", 1000], click: ["done", 260] } as const;
-    if (cursor === "done") return;
-    const [to, ms] = next[cursor];
-    const t = setTimeout(() => setCursor(to), ms);
-    return () => clearTimeout(t);
-  }, [blocks, cursor, phase, reduce]);
-
-  const published = cursor === "done";
-
   return (
-    <div ref={ref} className="grid w-full grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* 01 ASK — a person writes the request in a tool they already use */}
-      <Step index={0} phase={phase} cycle={cycle}>
-        <Panel active={phase === 0} head="Claude · #marketing" meta={<span className={cn(mono, "text-[#555]")}>now</span>}>
-          <p className={cn(mono, "text-[#555]")}>You</p>
-          <p className="min-h-24 text-base leading-6 text-off-white">
-            {REQUEST.slice(0, typed)}
-            {phase === 0 && typed < REQUEST.length && (
-              <span className="ml-px inline-block h-[18px] w-px translate-y-[3px] animate-pulse bg-off-white" />
-            )}
-          </p>
-          <motion.p
-            initial={false}
-            animate={{ opacity: sent ? 1 : 0, y: sent ? 0 : 4 }}
-            transition={{ duration: 0.5, ease: easeOut }}
-            className={cn(mono, "text-off-white-light")}
-          >
-            → Sent to Sanity Studio
-          </motion.p>
-          <div className="mt-auto flex items-center gap-2 border border-dark-grey py-1.5 pl-3 pr-1.5 text-[#555]">
-            <span className="flex-1">Talk to your LLM…</span>
-            <motion.span
-              animate={sent && phase === 0 ? { scale: [1, 0.85, 1] } : { scale: 1 }}
-              transition={{ duration: 0.4, ease: easeOut }}
-              className="flex size-7 items-center justify-center rounded-full bg-off-white"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M6 10.5V1.5M1.5 6L6 1.5 10.5 6" stroke="#212121" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </motion.span>
-          </div>
-        </Panel>
-      </Step>
-
-      {/* 02 BUILD — AI assembles the page from sections the team already approved */}
-      <Step index={1} phase={phase} cycle={cycle}>
-        <Panel
-          active={phase === 1}
-          head="Studio / Events / NYC Summit"
-          meta={<span className="bg-off-white px-1.5 py-1 font-mono text-xs uppercase leading-3 tracking-tight text-off-black">Draft</span>}
-        >
-          <div className="flex items-center justify-between">
-            <p className={cn(mono, "text-off-white-light")}>From your approved library</p>
-            <p className={cn(mono, "text-[#555]")}>{rows}/{SECTIONS.length}</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <AnimatePresence initial={false}>
-              {SECTIONS.slice(0, rows).map((name, i) => {
-                const settling = phase === 1 && i === rows - 1;
-                return (
-                  <motion.div
-                    key={`${cycle}-${name}`}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.6, ease: easeOut }}
-                    className={cn(
-                      "flex items-center gap-3 border p-3 text-off-white transition-colors duration-500",
-                      settling ? "border-dashed border-off-white-light" : "border-dark-grey",
-                    )}
-                  >
-                    <span className="flex size-3.5 shrink-0 items-center justify-center border border-[#666]">
-                      <motion.span initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.45, duration: 0.4, ease: easeOut }} className="flex">
-                        <Check />
-                      </motion.span>
-                    </span>
-                    <span className="flex-1">{name}</span>
-                    <span className={cn(mono, "text-[#555]")}>Approved</span>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        </Panel>
-      </Step>
-
-      {/* 03 REVIEW — the same NYC page on staging; a person publishes */}
-      <Step index={2} phase={phase} cycle={cycle}>
-        <Panel active={phase === 2} head="Live preview · staging" meta={<span className={cn(mono, "text-[#555]")}>/nyc-summit</span>}>
-          <div className="flex flex-1 items-center">
-            <svg viewBox="0 0 336 170" fill="none" className="w-full" style={{ fontFamily: "var(--font-sans)" }}>
-              {[
-                <g key="hero"><rect x=".5" y=".5" width="335" height="58" fill="#2a2a2a" stroke="#444" /><text x="14" y="22" fill="#888" fontSize="8" style={{ fontFamily: "var(--font-mono)" }}>ENTERPRISE SECURITY</text><text x="14" y="44" fill="#d0d0d0" fontSize="15">NYC Security Summit</text></g>,
-                <g key="logos">{[0, 1, 2, 3].map((i) => <rect key={i} x={40.5 + i * 76} y="70.5" width="28" height="10" fill="#2a2a2a" stroke="#3a3a3a" />)}</g>,
-                <g key="cards">{[0, 1, 2].map((i) => <rect key={i} x={0.5 + i * 114} y="92.5" width="106" height="42" fill="#262626" stroke="#3a3a3a" />)}</g>,
-                <g key="cta"><rect x=".5" y="144.5" width="335" height="24" fill="#262626" stroke="#3a3a3a" /><rect x="14" y="154" width="96" height="4" fill="#555" /><rect x="292" y="151" width="32" height="10" fill="#888" /></g>,
-              ].map((g, i) => (
-                <motion.g key={i} initial={false} animate={{ opacity: i < blocks ? 1 : 0, y: i < blocks ? 0 : 6 }} transition={{ duration: 0.7, ease: easeOut }}>
-                  {g}
-                </motion.g>
-              ))}
-            </svg>
-          </div>
-          <div className="flex items-center gap-2 text-off-white-light">
-            <motion.p
-              key={published ? "approved" : "review"}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: easeOut }}
-              className={cn(mono, "flex-1", published && "text-off-white")}
-            >
-              {published ? "Approved by your team" : "Review, edit, then publish"}
-            </motion.p>
-            <div className="relative">
-              <motion.span
-                animate={{ scale: cursor === "click" ? 0.94 : 1 }}
-                transition={{ duration: 0.18 }}
-                className={cn(
-                  "inline-flex items-center gap-2 px-3 py-2 font-mono text-sm uppercase tracking-tight transition-colors duration-300",
-                  published ? "bg-dark-grey text-off-white" : "bg-off-white text-off-black",
-                )}
-              >
-                {published ? "Published" : "Publish"}
-                <span className={cn("flex size-4 items-center justify-center rounded-full transition-colors duration-300", published ? "bg-off-white" : "bg-off-black")}>
-                  {published ? (
-                    <Check size={10} color="#212121" />
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="size-3"><path d="M1.5 6H10.5M10.5 6L6 1.5M10.5 6L6 10.5" stroke="#EFEFEF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  )}
-                </span>
-              </motion.span>
-              {/* the human: a cursor travels in and clicks Publish */}
-              <motion.span
-                className="pointer-events-none absolute left-[55%] top-[45%] z-10"
-                initial={false}
-                animate={
-                  cursor === "off"
-                    ? { opacity: 0, x: 70, y: 46 }
-                    : cursor === "moving"
-                      ? { opacity: 1, x: 0, y: 0 }
-                      : cursor === "click"
-                        ? { opacity: 1, x: 0, y: 0, scale: 0.85 }
-                        : { opacity: 0, x: 6, y: 10, scale: 1 }
-                }
-                transition={{ duration: cursor === "moving" ? 0.9 : 0.25, ease: easeOut, opacity: { duration: cursor === "done" ? 0.8 : 0.3, delay: cursor === "done" ? 0.6 : 0 } }}
-              >
-                <Cursor />
-              </motion.span>
+    <div ref={ref} className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
+      {PANELS.map((Panel, i) => {
+        const idx = i as Phase;
+        const mode: Mode = reduce ? "after" : phase === idx ? "play" : phase > idx ? "after" : "before";
+        return (
+          <Step key={i} index={idx} phase={reduce ? 3 : phase} cycle={cycle}>
+            <div className={cn("relative aspect-[4/3] w-full border bg-[#1c1c1c] transition-colors duration-700", !reduce && phase === idx ? "border-[#4a4a4a]" : "border-dark-grey")}>
+              <PanelCtx.Provider value={{ mode, dur: PHASE_S[idx] }}>
+                <svg key={`${cycle}-${mode}`} viewBox="0 0 320 240" fill="none" className="absolute inset-0 h-full w-full">
+                  <Panel />
+                </svg>
+              </PanelCtx.Provider>
             </div>
-          </div>
-        </Panel>
-      </Step>
+          </Step>
+        );
+      })}
     </div>
   );
 }
 
-function Step({ index, phase, cycle, children }: { index: Phase; phase: Phase; cycle: number; children: React.ReactNode }) {
+function Step({ index, phase, cycle, children }: { index: Phase; phase: number; cycle: number; children: React.ReactNode }) {
   const active = phase === index;
   const done = phase > index;
   const step = STEPS[index];
@@ -273,7 +333,7 @@ function Step({ index, phase, cycle, children }: { index: Phase; phase: Phase; c
           className="absolute inset-0 origin-left bg-off-white"
           initial={{ scaleX: active ? 0 : done ? 1 : 0 }}
           animate={{ scaleX: active || done ? 1 : 0 }}
-          transition={{ duration: active ? PHASE_MS[index] / 1000 : 0.6, ease: active ? "linear" : "easeInOut" }}
+          transition={{ duration: active ? PHASE_S[index] + 0.3 : 0.6, ease: active ? "linear" : "easeInOut" }}
         />
       </div>
       <div className={cn("flex flex-col gap-2 transition-colors duration-700", active ? "text-off-white" : "text-off-white-light")}>

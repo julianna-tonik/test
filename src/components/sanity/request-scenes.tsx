@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useId } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { createContext, useContext, useId, useRef } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { easeOut } from "./shared";
 
 /**
@@ -432,6 +432,105 @@ export function RequestScene({ index, active }: { index: number; active: boolean
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
       <svg viewBox="0 0 480 204" fill="none" className="block h-auto w-full overflow-visible">
         <Scene />
+      </svg>
+    </Ctx.Provider>
+  );
+}
+
+/* ───────────────────────── Migration · Webflow keeps running, Sanity fills in stages ───────────────────────── */
+
+const M = 20;
+const mPath = (x: number, y: number, cols: number, rows: number) => {
+  let d = "";
+  for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) d += `M${x + k * M + 0.5} ${y + r * M + 0.5}h${M}v${M}h${-M}Z`;
+  return d;
+};
+
+function MEdge({ x, y, w, h, t, dashed, color = SEL }: { x: number; y: number; w: number; h: number; t: Track; dashed?: boolean; color?: string }) {
+  const x0 = x + 0.5, y0 = y + 0.5;
+  return (
+    <G t={{ opacity: t }}>
+      <rect x={x0} y={y0} width={w} height={h} stroke={color} strokeDasharray={dashed ? "4 3" : undefined} fill="none" />
+      {[[x0, y0], [x0 + w, y0], [x0, y0 + h], [x0 + w, y0 + h]].map(([a, b], i) => <Node key={i} x={a} y={b} />)}
+    </G>
+  );
+}
+
+/** One import: Webflow range selected (dashed), a copy travels down into the Sanity lane. */
+function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
+  const x = col * M, w = cols * M;
+  return (
+    <>
+      <MEdge x={x} y={22} w={w} h={2 * M} dashed t={pulse(s, s + 0.6)} />
+      <G t={{ y: ev(0, 90, s + 0.4, s + 1.2), opacity: show(s + 0.3, 0.2) }}>
+        <rect x={x + 0.5} y={22.5} width={w} height={2 * M} fill={BG} />
+        <path d={mPath(x, 22, cols, 2)} stroke={CHANGED_CELL} fill="none" />
+        <MEdge x={x} y={22} w={w} h={2 * M} dashed t={pulse(s + 0.3, s + 1.2)} />
+        <G t={{ opacity: show(s + 1.3) }}>
+          <rect x={x + 0.5} y={22.5} width={w} height={2 * M} stroke={CHANGED_EDGE} fill="none" />
+        </G>
+      </G>
+    </>
+  );
+}
+
+const TRAFFIC = Array.from({ length: 6 }).map((_, i) => ({ row: i % 2, delay: i * 1.05 }));
+
+export function MigrationLanes() {
+  const ref = useRef<SVGSVGElement>(null);
+  const inView = useInView(ref, { margin: "-20% 0px" });
+  const reduce = !!useReducedMotion();
+  const on = inView && !reduce;
+  return (
+    <Ctx.Provider value={{ on, reduce }}>
+      <svg ref={ref} viewBox="0 0 620 196" fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
+        <text x="0" y="11" fill={MUTED} fontSize="11">WEBFLOW — LIVE</text>
+        <text x="0" y="101" fill={MUTED} fontSize="11">SANITY</text>
+
+        {/* the live site keeps running: visitors keep moving through it */}
+        <rect x="0.5" y="22.5" width={30 * M} height={2 * M} fill={BG} />
+        <path d={mPath(0, 22, 30, 2)} stroke={GRID} fill="none" />
+        {TRAFFIC.map((v, i) => (
+          <motion.rect
+            key={i}
+            x={-4}
+            y={22 + v.row * M + M / 2 - 2}
+            width="4"
+            height="4"
+            fill={MUTED}
+            initial={{ x: 0, opacity: 0 }}
+            animate={on ? { x: [0, 600], opacity: [0, 1, 1, 0] } : { x: 0, opacity: 0 }}
+            transition={on ? { duration: 6.3, ease: "linear", repeat: Infinity, delay: v.delay, opacity: { duration: 6.3, times: [0, 0.05, 0.95, 1], repeat: Infinity, delay: v.delay } } : { duration: 0.3 }}
+          />
+        ))}
+
+        {/* Sanity lane: empty slots, filled in stages */}
+        <rect x="0.5" y="112.5" width={30 * M} height={2 * M} stroke="#3a3a3a" strokeDasharray="2 3" fill="none" />
+
+        <G t={{ opacity: FADE }}>
+          <Import col={0} cols={10} s={0.5} />
+          <Import col={10} cols={8} s={2.0} />
+          <G t={{ opacity: show(1.7) }}>
+            <text x="0" y="170" fill={MUTED} fontSize="10">IMPORT 01</text>
+          </G>
+          <G t={{ opacity: show(3.2) }}>
+            <line x1="200.5" y1="106" x2="200.5" y2="158" stroke={GRID} />
+            <text x="206" y="170" fill={MUTED} fontSize="10">IMPORT 02</text>
+          </G>
+
+          {/* content changes on the live site (a person edits) → re-imported, no freeze */}
+          <MEdge x={4 * M} y={22} w={M} h={M} t={pulse(3.6, 4.6)} />
+          <G t={{ opacity: pulse(4.5, 5.6) }}>
+            <line x1={4.5 * M + 0.5} y1="64" x2={4.5 * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
+          </G>
+          <G t={{ y: ev(0, 90, 4.7, 5.4), opacity: [[0, 0], [4.6, 0], [4.7, 1], [5.6, 1], [5.9, 0], [D, 0]] }}>
+            <rect x={4 * M + 0.5} y={22.5} width={M} height={M} fill={BG} stroke={SEL} strokeDasharray="3 2" />
+          </G>
+          <G t={{ opacity: show(5.4) }}>
+            <rect x={4 * M + 0.5} y={112.5} width={M} height={M} stroke={SEL} fill="none" />
+            <text x={4 * M + 26} y="100" fill={SEL} fontSize="10">RE-IMPORT</text>
+          </G>
+        </G>
       </svg>
     </Ctx.Provider>
   );

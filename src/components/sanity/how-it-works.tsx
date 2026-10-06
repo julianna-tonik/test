@@ -4,6 +4,14 @@ import { Reveal, ScrollText, SectionLabel } from "./shared";
 import { Actor, ActorTag } from "./actor";
 import { cn } from "@/lib/utils";
 
+/** Letters drawn as thin strokes, like the F/T/S glyphs in Vibe Fixer (not a font). */
+const GLYPHS: Record<string, string> = {
+  D: "M24.2 20.4V37.2h4.3c4.1 0 6.4-3.1 6.4-8.4s-2.3-8.4-6.4-8.4z",
+  U: "M23.6 20.4v11.4c0 3.5 1.9 5.5 5 5.5s5-2 5-5.5V20.4",
+  G: "M33.9 24.3c-.8-2.6-2.7-4.1-5.3-4.1-3.6 0-5.7 3.3-5.7 8.6s2.1 8.6 5.7 8.6c3.4 0 5.5-2.5 5.5-6.4v-.9h-5.4",
+  P: "M24.6 37.9V20.4h5c2.9 0 4.6 1.8 4.6 4.7s-1.7 4.7-4.6 4.7h-5",
+};
+
 /**
  * Letter icon in the Vibe Fixer F/T/S style: glyph in square + circle, corner index.
  * The circle carries the actor: solid = a person, dashed = AI.
@@ -17,11 +25,9 @@ function LetterIcon({ glyph, index, actor }: { glyph: string; index: number; act
       ) : (
         <circle cx="28.56" cy="28.56" r="20.64" stroke="#888" strokeWidth=".75" strokeDasharray="2 2.4" />
       )}
-      <text x="28.56" y="36.2" textAnchor="middle" fill="#fff" fontSize="22" style={{ fontFamily: "var(--font-sans)" }}>
-        {glyph}
-      </text>
+      <path d={GLYPHS[glyph]} stroke="#fff" strokeWidth="1.35" />
       <rect x=".25" y="43.16" width="13.72" height="13.72" stroke="#666" strokeWidth=".5" />
-      <text x="7.1" y="52.5" textAnchor="middle" fill="#fff" fontSize="7" style={{ fontFamily: "var(--font-mono)" }}>
+      <text x="7.1" y="53.5" textAnchor="middle" fill="#fff" fontSize="9.6" style={{ fontFamily: "var(--font-sans)" }}>
         {index}
       </text>
     </svg>
