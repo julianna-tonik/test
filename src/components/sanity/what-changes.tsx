@@ -39,7 +39,7 @@ function Drift({ i, on, to, style, children }: { i: number; on: boolean; to: Rec
 
 type IconFn = (on: boolean) => React.ReactNode;
 // Vibe Fixer level of abstraction: one dark base shape (#383838) + one grey idea (#666).
-const icons: IconFn[] = [
+export const icons: IconFn[] = [
   // Launch campaigns faster — a brief (speed lines) pushes a page forward
   (on) => (
     <>
