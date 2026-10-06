@@ -45,16 +45,20 @@ const icons: ((on: boolean) => React.ReactNode)[] = [
     <>
       <rect x="29.5" y="33.5" width="26" height="18" stroke={G} />
       <text x="33.5" y="45" fill={T} style={mono}>CMS</text>
-      <path d="M42.5 33V22M42.5 52V63M29 42.5H24M56 42.5H61" stroke={D} />
+      <path d="M42.5 33V22M42.5 52V63M29 42.5H24" stroke={D} />
       <rect x="30.5" y="9.5" width="24" height="12" stroke={D} />
       <text x="34" y="18" fill="#555" style={mono}>CRM</text>
       <rect x="1.5" y="36.5" width="22" height="12" stroke={D} />
       <text x="4" y="45" fill="#555" style={mono}>I18N</text>
-      <rect x="61.5" y="36.5" width="21" height="12" stroke={D} />
-      <text x="65" y="45" fill="#555" style={mono}>API</text>
-      <Drift i={4} on={on} to={{ y: 4 }}>
-        <rect x="30.5" y="63.5" width="24" height="12" stroke={D} />
-        <text x="35.5" y="72" fill="#555" style={mono}>GA4</text>
+      <rect x="30.5" y="63.5" width="24" height="12" stroke={D} />
+      <text x="35.5" y="72" fill="#555" style={mono}>GA4</text>
+      {/* the right one connects: its line draws in, then the tool lights up */}
+      <Drift i={4} on={on} to={{ scaleX: 0 }} style={{ transformBox: "fill-box", originX: 0 }}>
+        <path d="M56 42.5H61" stroke={D} />
+      </Drift>
+      <Drift i={4} on={on} to={{ opacity: 0.25 }}>
+        <rect x="61.5" y="36.5" width="21" height="12" stroke={D} />
+        <text x="65" y="45" fill="#555" style={mono}>API</text>
       </Drift>
     </>
   ),
