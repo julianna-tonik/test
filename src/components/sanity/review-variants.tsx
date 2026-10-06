@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import {
-  ab, BG, C, CARD_W4, CARDS4, cellsPath, EDGE, EdgeBox, G, GoLive, MID, heroNoise, PanelCtx, Person, R, SwitchHeader, useDur,
+  ab, BAR, BG, C, CARD_W4, CARDS4, cellsPath, EDGE, EdgeBox, G, GoLive, heroNoise, leftGrow, PanelCtx, Person, R, SwitchHeader, useCardMoves, useDur,
 } from "./product-fragments";
 
-export { ReviewGrid } from "./product-fragments";
+export { ReviewApprove, ReviewGrid } from "./product-fragments";
 
 const HERO_NOISE_D = heroNoise(7.6);
 
@@ -15,16 +15,7 @@ const HERO_NOISE_D = heroNoise(7.6);
  * visual language. Same page as panel 02: hero, logo row, four cards, CTA.
  */
 
-const BAR = "#5a5a5a";
-const leftGrow = { transformBox: "fill-box" as const, originX: 0, originY: 0.5 };
 const CARD_Y = 132;
-const SLOT_STEP = CARDS4[1] - CARDS4[0];
-
-/** Card row where card 4 is dragged to the front and the others make room. */
-function useCardMoves(t0: number, t1: number) {
-  const d = useDur();
-  return CARDS4.map((x, i) => (i === 3 ? ab(0, CARDS4[0] - x, t0, t1, d) : ab(0, SLOT_STEP, t0, t1, d)));
-}
 
 /* ── A · TEXT: real-looking copy, one tone, hierarchy by weight ── */
 
@@ -77,68 +68,6 @@ export function ReviewText() {
           y: [[0, 236], [0.4, 236], [1.1, 60], [2.3, 60], [2.85, 150], [4.0, 150], [4.8, 18], [d, 18]],
           opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.5, 1], [5.9, 0], [d, 0]],
           scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.8, 1], [4.87, 0.82], [4.97, 1], [d, 1]],
-        }}
-      />
-    </>
-  );
-}
-
-/* ── C · APPROVE: AI's draft is dashed; each block the person checks turns solid ── */
-
-/** A block that starts as AI draft (dashed) and becomes approved (solid) at t. */
-function DraftBlock({ x, y, w, h, t }: { x: number; y: number; w: number; h: number; t: number }) {
-  const d = useDur();
-  return (
-    <>
-      <G t={{ opacity: ab(1, 0, t, t + 0.25, d) }}>
-        <rect x={x + 0.5} y={y + 0.5} width={w} height={h} stroke={MID} strokeDasharray="3 3" fill="none" />
-      </G>
-      <G t={{ opacity: ab(0, 1, t, t + 0.25, d) }}>
-        <rect x={x + 0.5} y={y + 0.5} width={w} height={h} stroke={EDGE} fill="none" />
-      </G>
-      <G t={{ opacity: [[0, 0], [t - 0.05, 0], [t + 0.05, 1], [t + 0.6, 1], [t + 0.8, 0], [d, 0]] }}>
-        <EdgeBox x={x} y={y} w={w} h={h} />
-      </G>
-    </>
-  );
-}
-
-export function ReviewApprove() {
-  const d = useDur();
-  const moves = useCardMoves(2.9, 3.6);
-  return (
-    <>
-      <SwitchHeader t={5.6} />
-
-      {/* hero: approved, and its headline shortened */}
-      <DraftBlock x={40} y={48} w={240} h={50} t={1.15} />
-      <R t={{ scaleX: [[0, 1], [1.35, 1], [1.5, 0], [1.9, 0.75], [d, 0.75]] }} linear={["scaleX"]} x={50} y={58} width={160} height={6} fill={BAR} style={leftGrow} />
-      <rect x="50" y="70" width="96" height="6" fill={BAR} />
-      <rect x="50" y="84" width="150" height="2" fill={BAR} />
-
-      {/* logo row */}
-      <DraftBlock x={40} y={110} w={240} h={10} t={2.2} />
-
-      {/* cards: the fourth is moved to the front, then the row is approved */}
-      {CARDS4.map((x, i) => (
-        <G key={i} t={{ x: moves[i] }}>
-          <DraftBlock x={x} y={CARD_Y} w={CARD_W4} h={40} t={4.0} />
-          <rect x={x + 6} y={CARD_Y + 8} width="28" height="4" fill={BAR} />
-        </G>
-      ))}
-
-      {/* cta */}
-      <DraftBlock x={40} y={184} w={240} h={30} t={4.75} />
-      <rect x="50" y="193" width="110" height="5" fill={BAR} />
-
-      <GoLive id="c" t={6.0} boxes={[[40, 48, 240, 50], [40, 110, 240, 10], ...CARDS4.map((x): [number, number, number, number] => [x, CARD_Y, CARD_W4, 40]), [40, 184, 240, 30]]} />
-
-      <Person
-        t={{
-          x: [[0, 300], [0.4, 300], [1.05, 150], [1.9, 150], [2.15, 200], [2.55, 200], [2.8, 255], [2.9, 255], [3.6, 65], [3.75, 65], [3.95, 160], [4.4, 160], [4.7, 200], [5.0, 200], [5.5, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.05, 62], [1.9, 62], [2.15, 116], [2.55, 116], [2.8, 152], [3.75, 152], [3.95, 152], [4.4, 152], [4.7, 198], [5.0, 198], [5.5, 18], [d, 18]],
-          opacity: [[0, 0], [0.4, 0], [0.6, 1], [6.2, 1], [6.6, 0], [d, 0]],
-          scale: [[0, 1], [1.05, 1], [1.12, 0.82], [1.22, 1], [2.15, 1], [2.22, 0.82], [2.32, 1], [2.85, 1], [2.9, 0.85], [3.6, 0.85], [3.7, 1], [3.95, 1], [4.02, 0.82], [4.12, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [5.5, 1], [5.57, 0.82], [5.67, 1], [d, 1]],
         }}
       />
     </>
