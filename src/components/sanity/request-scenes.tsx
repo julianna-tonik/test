@@ -148,10 +148,12 @@ const FADE: Track = [[0, 1], [6.25, 1], [6.5, 0], [6.75, 0], [D, 1]];
 function SceneEvent() {
   const L = 16, P = 272, dx = P - L;
   const picks = [
-    { y: 20, cols: 16, rows: 3, to: 40, label: "HERO", kind: "hero" },
-    { y: 64, cols: 8, rows: 3, to: 84, label: "SPEAKERS", kind: "people" },
-    { y: 108, cols: 10, rows: 3, to: 128, label: "STORIES", kind: "quote" },
-  ] as const;
+    // evenly spaced inside the page frame: nav at the top, footer flush at the bottom
+    { y: 20, cols: 16, rows: 3, to: 43 },
+    { y: 64, cols: 8, rows: 3, to: 90 },
+    { y: 108, cols: 10, rows: 3, to: 137 },
+    { y: 184, cols: 16, rows: 1, to: 184 },
+  ];
   return (
     <G t={{ opacity: FADE }}>
 
@@ -171,7 +173,7 @@ function SceneEvent() {
 
       {/* AI picks a section: selected on its edge, a copy travels into the page */}
       {picks.map((p, i) => {
-        const s = 0.8 + i * 1.45;
+        const s = 0.8 + i * 1.2;
         return (
           <G key={i} t={{ x: ev(0, dx, s + 0.6, s + 1.4), y: ev(0, p.to - p.y, s + 0.6, s + 1.4), opacity: show(s, 0.3) }}>
             <rect x={L + 0.5} y={p.y + 0.5} width={p.cols * C} height={p.rows * C} fill={BG} />
@@ -182,7 +184,7 @@ function SceneEvent() {
         );
       })}
 
-      <Glint id="event" boxes={[[P, 20, 16, 1], ...picks.map((p): Box => [P, p.to, p.cols, p.rows])]} />
+      <Glint id="event" at={5.3} boxes={[[P, 20, 16, 1], ...picks.map((p): Box => [P, p.to, p.cols, p.rows])]} />
 
     </G>
   );
