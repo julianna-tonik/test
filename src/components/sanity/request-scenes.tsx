@@ -33,6 +33,8 @@ type Box = [x: number, y: number, cols: number, rows: number];
 /** a → b between t0 and t1, held until the reset (hidden by the scene fade). */
 /** a → b between t0 and t1; at the end of the loop it returns to a (while moved things are hidden, see G). */
 const ev = (a: V, b: V, t0: number, t1: number): Track => [[0, a], [t0, a], [t1, b], [6.25, b], [6.5, a], [D, a]];
+/** a → b, held until the loop restarts (for things that are already hidden by then). */
+const stay = (a: V, b: V, t0: number, t1: number): Track => [[0, a], [t0, a], [t1, b], [6.9, b], [6.95, a], [D, a]];
 /** Things that moved switch off where they ended, go back unseen, and switch on again at their start. */
 const HIDE_RESET: Track = [[0, 1], [6.05, 1], [6.25, 0], [6.55, 0], [6.85, 1], [D, 1]];
 const MOVES = ["x", "y", "scale", "scaleX", "scaleY"];
@@ -182,7 +184,8 @@ function SceneEvent() {
       {picks.map((p, i) => {
         const s = 0.8 + i * 1.2;
         return (
-          <G key={i} t={{ x: ev(0, dx, s + 0.6, s + 1.4), y: ev(0, p.to - p.y, s + 0.6, s + 1.4), opacity: show(s, 0.3) }}>
+          // at the end the copy just switches off in the page; it only jumps back once it is invisible
+          <G key={i} t={{ x: stay(0, dx, s + 0.6, s + 1.4), y: stay(0, p.to - p.y, s + 0.6, s + 1.4), opacity: [[0, 0], [s, 0], [s + 0.3, 1], [6.0, 1], [6.4, 0], [D, 0]] }}>
             <rect x={L + 0.5} y={p.y + 0.5} width={p.cols * C} height={p.rows * C} fill={BG} />
             <path d={cellsPath(L, p.y, p.cols, p.rows)} stroke={CHANGED_CELL} strokeWidth="1" fill="none" />
             <Edge x={L} y={p.y} cols={p.cols} rows={p.rows} dashed t={pulse(s, s + 1.4)} />
