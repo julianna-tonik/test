@@ -417,14 +417,14 @@ function AskLiteral() {
   );
 }
 
-/** The library lists sections in its own order; they are picked in yet another order, Hero first. */
+/** The library lists sections in its own order, so picks jump around the list while the page fills top → bottom. */
 const LIB_ORDER: { name: string; pick?: number }[] = [
   { name: "Hero", pick: 0 },
   { name: "Stories", pick: 3 },
   { name: "Stats" },
-  { name: "Logos", pick: 2 },
+  { name: "Logos", pick: 1 },
   { name: "Form", pick: 4 },
-  { name: "Speakers", pick: 1 },
+  { name: "Speakers", pick: 2 },
   { name: "Schedule" },
 ];
 const pickAt = (n: number) => 0.2 + n * 0.6;

@@ -10,7 +10,7 @@ const G = "#666666";
 const T = "#888888";
 const mono = { fontFamily: "var(--font-mono)", fontSize: 6.5, letterSpacing: 0.2 } as const;
 
-const icons: ((on: boolean) => React.ReactNode)[] = [
+export const icons: ((on: boolean) => React.ReactNode)[] = [
   // Create pages from familiar tools — a chat message turns into a page
   (on) => (
     <>
