@@ -28,9 +28,12 @@ export function SanityMigration() {
           <p className="font-mono text-sm uppercase leading-none tracking-tight text-off-white">Where it can go</p>
         </div>
         <Reveal className="grid w-full grid-cols-1 gap-10 lg:grid-cols-[420px_repeat(3,1fr)]">
-          <p className="text-3xl leading-10 text-off-white">
-            Start with pages. <span className="text-off-white-light">Expand when it makes sense.</span>
-          </p>
+          <div className="flex flex-col gap-3">
+            <p className="text-3xl leading-10 text-off-white">
+              Start with pages. <span className="text-off-white-light">Expand when it makes sense.</span>
+            </p>
+            <p className="text-base leading-6 text-off-white-light">The same workflow can support more of your content operations.</p>
+          </div>
           <p className="text-base leading-6">Create pages from familiar tools. <span className="text-off-white-light">Start a request in Slack, Claude, Codex, or another tool.</span></p>
           <p className="text-base leading-6">Handle repetitive work. <span className="text-off-white-light">Manage translations, metadata, and bulk updates.</span></p>
           <p className="text-base leading-6">Connect external systems. <span className="text-off-white-light">Add analytics, CRM, translation, or internal tools.</span></p>

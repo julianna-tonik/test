@@ -124,19 +124,20 @@ function Icon({ i }: { i: number }) {
   const inView = useInView(ref, { margin: "-15% 0px" });
   const reduce = useReducedMotion();
   return (
-    <svg ref={ref} viewBox="0 0 84 84" fill="none" className="m-[-18px] size-[84px]">
+    <svg aria-hidden ref={ref} viewBox="0 0 84 84" fill="none" className="m-[-18px] size-[84px]">
       {icons[i](inView && !reduce)}
     </svg>
   );
 }
 
-const items = [
-  ["Launch campaigns faster", "Turn a brief into a Sanity draft without starting from scratch."],
-  ["Adapt campaigns for each audience", "Create versions for markets, segments, and languages."],
-  ["Test more ideas", "Create, preview, and measure page variations faster."],
-  ["Keep every page on-brand", "Use layouts and content patterns your team has approved."],
-  ["Reuse your strongest content", "Reuse customer stories, product messages, and CTAs."],
-  ["Review and publish with confidence", "Keep staging, approvals, and publishing under control."],
+// Order and copy exactly as V1. `icon` points into `icons`.
+const items: { title: string; text: string; icon: number }[] = [
+  { title: "Launch campaigns faster", text: "Turn a brief into a Sanity draft without starting from scratch.", icon: 0 },
+  { title: "Keep every page on-brand", text: "Use layouts and content patterns your team has approved.", icon: 3 },
+  { title: "Reuse your strongest content", text: "Reuse customer stories, product messages, and CTAs.", icon: 4 },
+  { title: "Adapt campaigns for each audience", text: "Create versions for markets, segments, and languages.", icon: 1 },
+  { title: "Test more ideas", text: "Create, preview, and measure page variations faster.", icon: 2 },
+  { title: "Review and publish with confidence", text: "Keep staging, approvals, and publishing under control.", icon: 5 },
 ];
 
 export function SanityWhatChanges() {
@@ -150,9 +151,9 @@ export function SanityWhatChanges() {
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 md:grid-cols-3">
-          {items.map(([title, text], i) => (
+          {items.map(({ title, text, icon }, i) => (
             <Reveal key={title} delay={(i % 3) * 0.08} className="flex flex-col gap-6">
-              <Icon i={i} />
+              <Icon i={icon} />
               <div className="flex w-full flex-col text-base leading-6">
                 <p className="text-off-white">{title}</p>
                 <p className="text-off-white-light">{text}</p>

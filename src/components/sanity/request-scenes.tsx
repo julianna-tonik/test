@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useId, useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { easeOut } from "./shared";
 
@@ -111,8 +111,7 @@ function Changed({ x, y, cols, rows, t }: { x: number; y: number; cols: number; 
 }
 
 /** Light sweep across the finished result — the VC-1 glow. */
-function Glint({ boxes, at = 5 }: { boxes: Box[]; at?: number }) {
-  const id = useId().replace(/:/g, "");
+function Glint({ id, boxes, at = 5 }: { id: string; boxes: Box[]; at?: number }) {
   return (
     <>
       <defs>
@@ -192,7 +191,7 @@ function SceneEvent() {
         );
       })}
 
-      <Glint boxes={[[P, 20, 16, 1], ...picks.map((p): Box => [P, p.to, p.cols, p.rows])]} />
+      <Glint id="event" boxes={[[P, 20, 16, 1], ...picks.map((p): Box => [P, p.to, p.cols, p.rows])]} />
 
       <G t={{ opacity: show(5) }}>
         <rect x={P + 0.5} y={172.5} width="44" height="16" stroke={CHANGED_EDGE} strokeWidth="1" fill={BG} />
@@ -221,22 +220,23 @@ function SceneReport() {
         <Edge x={X} y={100} cols={W} rows={3} dashed t={pulse(0.6, 2.0)} />
       </G>
 
-      {/* gated report: dims behind the form, opens after the email */}
+      {/* gated report: dims and locks behind the form, opens after the email */}
       <G t={{ opacity: [[0, 1], [2.4, 1], [2.8, 0.3], [4.1, 0.3], [4.4, 1], [D, 1]] }}>
         <Cells x={X} y={164} cols={W} rows={3} />
       </G>
       <Changed x={X} y={164} cols={W} rows={3} t={show(4.2)} />
+      <G t={{ opacity: [[0, 0], [2.6, 0], [2.9, 1], [4.0, 1], [4.3, 0], [D, 0]] }}>
+        <rect x={X + (W * C) / 2 - 9.5} y={172.5} width="20" height="20" fill={BG} stroke="none" />
+        <g transform={`translate(${X + (W * C) / 2 - 4} 176) scale(1.3)`}>
+          <Lock x={0} y={0} />
+        </g>
+      </G>
 
-      {/* form: field + button, sitting on the grid */}
+      {/* form: an email field (typed line fills it) + submit */}
       <G t={{ opacity: show(2.4) }}>
-        <Cells x={X} y={144} cols={15} rows={1} />
-        <Cells x={X + 15 * C} y={144} cols={5} rows={1} />
-        <G t={{ opacity: ev(1, 0, 3.0, 3.2) }}>
-          <Tag x={X + 5} y={153.5}>WORK EMAIL</Tag>
-        </G>
-        <R t={{ scaleX: ev(0, 1, 3.1, 3.9) }} x={X + 5} y={150} width={15 * C - 10} height="1" fill={CHANGED_EDGE} style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }} />
-        <Edge x={X} y={144} cols={W} rows={1} dashed t={pulse(2.4, 3.0)} />
-        <Edge x={X + 15 * C} y={144} cols={5} rows={1} t={show(3.9, 0.2)} nodes={false} />
+        <rect x={X + 0.5} y={144.5} width={15 * C - 4} height={C} fill={BG} stroke={CHANGED_EDGE} />
+        <R t={{ scaleX: ev(0, 1, 3.0, 3.8) }} x={X + 5} y={149} width={100} height={3} fill="#777" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
+        <R t={{ fill: ev("#2a2a2a", "#5a5a5a", 3.85, 4.05) }} x={X + 15 * C + 0.5} y={144.5} width={5 * C} height={C} stroke={CHANGED_EDGE} />
       </G>
 
       {/* staging preview */}
@@ -258,7 +258,7 @@ function SceneReport() {
         <Tag x={318} y={190}>STAGING PREVIEW</Tag>
       </G>
 
-      <Glint boxes={[[X, 6, W, 1], [X, 24, W, 2], [X, 56, W, 3], [X, 100, W, 3], [X, 164, W, 3]]} at={5.1} />
+      <Glint id="report" boxes={[[X, 6, W, 1], [X, 24, W, 2], [X, 56, W, 3], [X, 100, W, 3], [X, 164, W, 3]]} at={5.1} />
     </G>
   );
 }
@@ -325,11 +325,11 @@ function SceneHomepage() {
 
       {/* quote: swapped */}
       <Cells x={X} y={134} cols={W} rows={3} />
-      <R t={{ scaleX: ev(0, 1, 4.8, 5.4) }} x={X + 0.5} y={134.5} width={W * C} height={36} fill="#2a2a2a" style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }} />
+      <R t={{ scaleX: ev(0, 1, 4.8, 5.4) }} x={X + 0.5} y={134.5} width={W * C} height={36} fill="#2a2a2a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
       <Changed x={X} y={134} cols={W} rows={3} t={show(5.3)} />
       <Edge x={X} y={134} cols={W} rows={3} dashed t={pulse(4.5, 5.5)} />
 
-      <Glint boxes={[[X, 26, W, 3], [X, 70, W, 1], [X, 90, W, 3], [X, 134, W, 3]]} at={5.4} />
+      <Glint id="home" boxes={[[X, 26, W, 3], [X, 70, W, 1], [X, 90, W, 3], [X, 134, W, 3]]} at={5.4} />
     </G>
   );
 }
@@ -339,11 +339,12 @@ function SceneHomepage() {
 const SPLIT = [0.5, 1.3] as const;
 
 /** Constant visitor stream: half goes to A, half to B; some convert on the CTA. */
-const VISITORS = Array.from({ length: 16 }).map((_, j) => {
+const VISITORS = Array.from({ length: 8 }).map((_, j) => {
   const toB = j % 2 === 1;
-  const converts = toB ? [1, 3, 7, 9, 13, 15].includes(j) : [0, 6, 10, 14].includes(j);
-  return { s: 1.4 + j * 0.28, toB, converts };
+  const converts = toB ? [1, 3, 7].includes(j) : [0, 4].includes(j);
+  return { s: 1.5 + j * 0.42, toB, converts };
 });
+const TRAVEL = { down: 0.8, across: 0.7 };
 const METER = 8;
 
 function Page({ variant }: { variant: "A" | "B" }) {
@@ -378,7 +379,7 @@ function Page({ variant }: { variant: "A" | "B" }) {
           <rect key={k} x={14.5 + k * 10} y={176.5} width="7" height="7" stroke={GRID} strokeWidth="1" fill="none" />
         ))}
         {conv.map((v, n) => (
-          <R key={n} t={{ opacity: show(v.s + 1.05, 0.15) }} x={15.5 + n * 10} y={177.5} width="5" height="5" fill={b ? SEL : MUTED} />
+          <R key={n} t={{ opacity: show(v.s + TRAVEL.down + TRAVEL.across, 0.2) }} x={15.5 + n * 10} y={177.5} width="5" height="5" fill={b ? SEL : MUTED} />
         ))}
       </G>
     </>
@@ -410,9 +411,9 @@ function SceneAB() {
           <G
             key={j}
             t={{
-              x: [[0, 240.5], [v.s + 0.45, 240.5], [v.s + 0.95, endX], [D, endX]],
-              y: [[0, 6], [v.s, 6], [v.s + 0.45, endY], [D, endY]],
-              opacity: [[0, 0], [v.s, 0], [v.s + 0.1, 1], [v.s + (v.converts ? 0.95 : 0.7), 1], [v.s + (v.converts ? 1.1 : 0.95), 0], [D, 0]],
+              x: [[0, 240.5], [v.s + TRAVEL.down, 240.5], [v.s + TRAVEL.down + TRAVEL.across, endX], [D, endX]],
+              y: [[0, 6], [v.s, 6], [v.s + TRAVEL.down, endY], [D, endY]],
+              opacity: [[0, 0], [v.s, 0], [v.s + 0.15, 1], [v.s + TRAVEL.down + (v.converts ? TRAVEL.across : 0.4), 1], [v.s + TRAVEL.down + (v.converts ? TRAVEL.across + 0.2 : 0.65), 0], [D, 0]],
             }}
           >
             <rect x="-2" y="-2" width="4" height="4" fill={v.converts ? SEL : MUTED} />
@@ -430,7 +431,7 @@ export function RequestScene({ index, active }: { index: number; active: boolean
   const Scene = SCENES[index];
   return (
     <Ctx.Provider value={{ on: active && !reduce, reduce }}>
-      <svg viewBox="0 0 480 204" fill="none" className="block h-auto w-full overflow-visible">
+      <svg aria-hidden viewBox="0 0 480 204" fill="none" className="block h-auto w-full overflow-visible">
         <Scene />
       </svg>
     </Ctx.Provider>
@@ -483,52 +484,74 @@ export function MigrationLanes() {
   const on = inView && !reduce;
   return (
     <Ctx.Provider value={{ on, reduce }}>
-      <svg ref={ref} viewBox="0 0 620 196" fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
-        <text x="0" y="11" fill={MUTED} fontSize="11">WEBFLOW — LIVE</text>
+      <svg aria-hidden ref={ref} viewBox="0 0 620 196" fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
+        {/* labels: "live" moves from Webflow to Sanity at the cutover */}
+        <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.5, 0.4], [6.62, 1], [D, 1]] }}>
+          <text x="0" y="11" fill={MUTED} fontSize="11">WEBFLOW</text>
+        </G>
+        <G t={{ opacity: ev(1, 0, 5.4, 5.7) }}>
+          <text x="53" y="11" fill={MUTED} fontSize="11">— LIVE</text>
+        </G>
         <text x="0" y="101" fill={MUTED} fontSize="11">SANITY</text>
+        <G t={{ opacity: ev(0, 1, 5.6, 5.9) }}>
+          <text x="46" y="101" fill={SEL} fontSize="11">— LIVE</text>
+        </G>
 
-        {/* the live site keeps running: visitors keep moving through it */}
-        <rect x="0.5" y="22.5" width={30 * M} height={2 * M} fill={BG} />
-        <path d={mPath(0, 22, 30, 2)} stroke={GRID} fill="none" />
-        {TRAFFIC.map((v, i) => (
-          <motion.rect
-            key={i}
-            x={-4}
-            y={22 + v.row * M + M / 2 - 2}
-            width="4"
-            height="4"
-            fill={MUTED}
-            initial={{ x: 0, opacity: 0 }}
-            animate={on ? { x: [0, 600], opacity: [0, 1, 1, 0] } : { x: 0, opacity: 0 }}
-            transition={on ? { duration: 6.3, ease: "linear", repeat: Infinity, delay: v.delay, opacity: { duration: 6.3, times: [0, 0.05, 0.95, 1], repeat: Infinity, delay: v.delay } } : { duration: 0.3 }}
-          />
-        ))}
+        {/* Webflow lane — dims after the cutover */}
+        <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.5, 0.4], [6.62, 1], [D, 1]] }}>
+          <rect x="0.5" y="22.5" width={30 * M} height={2 * M} fill={BG} />
+          <path d={mPath(0, 22, 30, 2)} stroke={GRID} fill="none" />
+        </G>
 
         {/* Sanity lane: empty slots, filled in stages */}
         <rect x="0.5" y="112.5" width={30 * M} height={2 * M} stroke="#3a3a3a" strokeDasharray="2 3" fill="none" />
 
         <G t={{ opacity: FADE }}>
-          <Import col={0} cols={10} s={0.5} />
-          <Import col={10} cols={8} s={2.0} />
-          <G t={{ opacity: show(1.7) }}>
+          {/* visitors keep using the live site the whole time — then use the new one */}
+          <G t={{ y: ev(0, 90, 5.4, 5.9) }}>
+            {TRAFFIC.map((v, i) => (
+              <motion.rect
+                key={i}
+                x={-4}
+                y={22 + v.row * M + M / 2 - 2}
+                width="4"
+                height="4"
+                fill={MUTED}
+                initial={{ x: 0, opacity: 0 }}
+                animate={on ? { x: [0, 600], opacity: [0, 1, 1, 0] } : { x: 0, opacity: 0 }}
+                transition={on ? { duration: 6.3, ease: "linear", repeat: Infinity, delay: v.delay, opacity: { duration: 6.3, times: [0, 0.05, 0.95, 1], repeat: Infinity, delay: v.delay } } : { duration: 0.3 }}
+              />
+            ))}
+          </G>
+
+          <Import col={0} cols={10} s={0.4} />
+          <Import col={10} cols={8} s={1.5} />
+          <Import col={18} cols={12} s={4.0} />
+          <G t={{ opacity: show(1.6) }}>
             <text x="0" y="170" fill={MUTED} fontSize="10">IMPORT 01</text>
           </G>
-          <G t={{ opacity: show(3.2) }}>
+          <G t={{ opacity: show(2.7) }}>
             <line x1="200.5" y1="106" x2="200.5" y2="158" stroke={GRID} />
             <text x="206" y="170" fill={MUTED} fontSize="10">IMPORT 02</text>
           </G>
+          <G t={{ opacity: show(5.2) }}>
+            <line x1="360.5" y1="106" x2="360.5" y2="158" stroke={GRID} />
+            <text x="366" y="170" fill={MUTED} fontSize="10">IMPORT 03</text>
+          </G>
 
           {/* content changes on the live site (a person edits) → re-imported, no freeze */}
-          <MEdge x={4 * M} y={22} w={M} h={M} t={pulse(3.6, 4.6)} />
-          <G t={{ opacity: pulse(4.5, 5.6) }}>
+          <MEdge x={4 * M} y={22} w={M} h={M} t={pulse(2.6, 3.4)} />
+          <G t={{ opacity: pulse(3.3, 4.2) }}>
             <line x1={4.5 * M + 0.5} y1="64" x2={4.5 * M + 0.5} y2="110" stroke={MUTED} strokeDasharray="2 3" />
           </G>
-          <G t={{ y: ev(0, 90, 4.7, 5.4), opacity: [[0, 0], [4.6, 0], [4.7, 1], [5.6, 1], [5.9, 0], [D, 0]] }}>
+          <G t={{ y: ev(0, 90, 3.4, 4.0), opacity: [[0, 0], [3.3, 0], [3.4, 1], [4.2, 1], [4.5, 0], [D, 0]] }}>
             <rect x={4 * M + 0.5} y={22.5} width={M} height={M} fill={BG} stroke={SEL} strokeDasharray="3 2" />
           </G>
-          <G t={{ opacity: show(5.4) }}>
+          <G t={{ opacity: show(4.0) }}>
             <rect x={4 * M + 0.5} y={112.5} width={M} height={M} stroke={SEL} fill="none" />
-            <text x={4 * M + 26} y="100" fill={SEL} fontSize="10">RE-IMPORT</text>
+          </G>
+          <G t={{ opacity: pulse(3.4, 5.2) }}>
+            <text x={4 * M + 26} y="86" fill={SEL} fontSize="10">RE-IMPORT</text>
           </G>
         </G>
       </svg>

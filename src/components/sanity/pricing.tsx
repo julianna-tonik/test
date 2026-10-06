@@ -30,17 +30,48 @@ function PricingCard({ duration, title, description, price, features }: { durati
   );
 }
 
-export function SanityPricing() {
+/** V1 section 07 — "What we need and what you get", restored with its own label. */
+export function SanityNeedGet() {
   return (
     <section className="flex w-full max-w-container-6xl flex-col gap-[120px] pb-[120px]">
-      <SectionLabel>Ballpark pricing · $150/hour</SectionLabel>
-      <div className="flex w-full flex-col gap-16">
+      <SectionLabel>What we need and what you get</SectionLabel>
+      <div className="grid w-full grid-cols-1 gap-16 lg:grid-cols-[420px_1fr_1fr]">
         <Reveal className="flex flex-col gap-3">
           <p className="text-3xl leading-10 text-off-white">
             Bring your website. <span className="text-off-white-light">Leave with a system built to grow.</span>
           </p>
           <p className="text-base leading-6 text-off-white-light">We turn your current site into a code-based Sanity setup your team owns.</p>
         </Reveal>
+        <Reveal delay={0.08} className="flex flex-col gap-6">
+          <p className="text-base leading-6">
+            What we need from you <span className="text-off-white-light">— Your current setup and priorities.</span>
+          </p>
+          <List>
+            <ListItem>Access to your Webflow project or website code</ListItem>
+            <ListItem>The external systems you want to connect</ListItem>
+          </List>
+        </Reveal>
+        <Reveal delay={0.16} className="flex flex-col gap-6">
+          <p className="text-base leading-6">
+            What you get <span className="text-off-white-light">— A working system your team can use.</span>
+          </p>
+          <List>
+            <ListItem>A ready-to-use repo with a clear visual system</ListItem>
+            <ListItem>Sanity CMS with reusable page sections</ListItem>
+            <ListItem>Preview and deployment workflows</ListItem>
+            <ListItem>Conversational workflow through MCP, plus handover</ListItem>
+          </List>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+export function SanityPricing() {
+  return (
+    <section className="flex w-full max-w-container-6xl flex-col gap-[120px] pb-[120px]">
+      <SectionLabel>Ballpark pricing · $150/hour</SectionLabel>
+      <div className="flex w-full flex-col gap-16">
         <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
           <Reveal>
             <PricingCard
@@ -61,10 +92,7 @@ export function SanityPricing() {
             />
           </Reveal>
         </div>
-        <Reveal className="flex flex-col gap-2">
-          <p className="font-mono text-xs uppercase leading-4 tracking-tight text-off-white-light">
-            {"/*"} What we need from you: access to your Webflow project or website code, and the external systems you want to connect. {"*/"}
-          </p>
+        <Reveal>
           <p className="text-base leading-6 text-off-white-light">
             These are ballpark estimates. Contact us for a detailed quote based on your content, integrations, and timeline.
           </p>

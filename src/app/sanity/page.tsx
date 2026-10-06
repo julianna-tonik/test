@@ -6,7 +6,7 @@ import { SanityHowItWorks } from "@/components/sanity/how-it-works";
 import { SanityExamples } from "@/components/sanity/examples";
 import { SanityWhatChanges } from "@/components/sanity/what-changes";
 import { SanityMigration } from "@/components/sanity/migration";
-import { SanityPricing } from "@/components/sanity/pricing";
+import { SanityNeedGet, SanityPricing } from "@/components/sanity/pricing";
 import { SanityCta } from "@/components/sanity/cta";
 
 export const metadata: Metadata = {
@@ -25,6 +25,7 @@ export default function SanityPage() {
           <SanityExamples />
           <SanityWhatChanges />
           <SanityMigration />
+          <SanityNeedGet />
           <SanityPricing />
           <SanityCta />
           <Footer />

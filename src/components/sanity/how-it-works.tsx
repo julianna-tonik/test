@@ -18,7 +18,7 @@ const GLYPHS: Record<string, string> = {
  */
 function LetterIcon({ glyph, index, actor }: { glyph: string; index: number; actor: Actor }) {
   return (
-    <svg viewBox="0 0 57.13 57.13" fill="none" className="size-[57px]">
+    <svg aria-hidden viewBox="0 0 57.13 57.13" fill="none" className="size-[57px]">
       <rect x=".25" y=".25" width="56.63" height="56.63" stroke="#666" strokeWidth=".5" />
       {actor === "human" ? (
         <circle cx="28.56" cy="28.56" r="20.64" stroke="#efefef" strokeWidth=".75" />
