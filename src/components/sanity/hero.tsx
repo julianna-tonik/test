@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { Ticker } from "@/components/ui/ticker";
 import { useHeroScroll } from "@/components/sections/hero-scroll-context";
 import { ProductFragments } from "./product-fragments";
+import { HeroSlide } from "./hero-mobile";
 import { SanityBookCall, easeOut } from "./shared";
 import { SanityStickyHeader } from "./sticky-header";
 
@@ -64,7 +65,13 @@ export function SanityHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: easeOut, delay: 0.5 }}
         >
-          <ProductFragments />
+          {/* phones: one frame that slides Ask → Build → Review; md+: the three panels side by side */}
+          <div className="md:hidden">
+            <HeroSlide />
+          </div>
+          <div className="hidden md:block">
+            <ProductFragments />
+          </div>
         </motion.div>
       </div>
 
