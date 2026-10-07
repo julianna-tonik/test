@@ -442,7 +442,7 @@ export function RequestScene({ index, active, snapshot, fit, scope = "" }: { ind
   );
 }
 
-/* ───────────────────────── Migration · Webflow keeps running, Sanity fills in stages ───────────────────────── */
+/* ───────────────────────── Migration · existing site keeps running, Sanity fills in stages ───────────────────────── */
 
 const M = 20;
 const mPath = (x: number, y: number, cols: number, rows: number) => {
@@ -461,7 +461,7 @@ function MEdge({ x, y, w, h, t, dashed, color = SEL }: { x: number; y: number; w
   );
 }
 
-/** One import: Webflow range selected (dashed), a copy travels down into the Sanity lane. */
+/** One import: existing-site range selected (dashed), a copy travels down into the Sanity lane. */
 function Import({ col, cols, s }: { col: number; cols: number; s: number }) {
   const x = col * M, w = cols * M;
   return (
@@ -528,19 +528,19 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
   return (
     <Ctx.Provider value={{ on, reduce }}>
       <svg aria-hidden ref={ref} viewBox={narrow ? "0 0 301 196" : "0 0 620 196"} fill="none" className="block h-auto w-full overflow-visible" style={{ fontFamily: "var(--font-mono)" }}>
-        {/* labels: "live" moves from Webflow to Sanity at the cutover */}
+        {/* labels: "live" moves from the existing site to Sanity at the cutover */}
         <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.3, 0.4], [6.7, 1], [D, 1]] }}>
-          <text x="0" y="11" fill={MUTED} fontSize="11">WEBFLOW</text>
+          <text x="0" y="11" fill={MUTED} fontSize="11">EXISTING SITE</text>
         </G>
         <G t={{ opacity: ev(1, 0, 5.4, 5.7) }}>
-          <text x="53" y="11" fill={MUTED} fontSize="11">— LIVE</text>
+          <text x="93" y="11" fill={MUTED} fontSize="11">— LIVE</text>
         </G>
         <text x="0" y="101" fill={MUTED} fontSize="11">SANITY</text>
         <G t={{ opacity: ev(0, 1, 5.6, 5.9) }}>
           <text x="46" y="101" fill={SEL} fontSize="11">— LIVE</text>
         </G>
 
-        {/* Webflow lane — dims after the cutover */}
+        {/* Existing-site lane — dims after the cutover */}
         <G t={{ opacity: [[0, 1], [5.4, 1], [5.8, 0.4], [6.3, 0.4], [6.7, 1], [D, 1]] }}>
           <rect x="0.5" y="22.5" width={N * M} height={2 * M} fill={BG} />
           <path d={mPath(0, 22, N, 2)} stroke={GRID} fill="none" />
@@ -558,7 +558,7 @@ export function MigrationLanes({ snapshot }: { snapshot?: boolean } = {}) {
             </G>
           ))}
 
-          {/* no content freeze: the team keeps editing the live Webflow site; each edit lands in Sanity too */}
+          {/* no content freeze: the team keeps editing the live existing site; each edit lands in Sanity too */}
           {edits.map(([col, t]) => <Edit key={col} col={col} t={t} />)}
         </G>
       </svg>

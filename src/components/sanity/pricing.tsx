@@ -47,7 +47,7 @@ export function SanityNeedGet() {
             What we need from you <span className="text-off-white-light">— Your current setup and priorities.</span>
           </p>
           <List>
-            <ListItem>Access to your Webflow project or website code</ListItem>
+            <ListItem>Access to your current CMS or website code</ListItem>
             <ListItem>The external systems you want to connect</ListItem>
           </List>
         </Reveal>

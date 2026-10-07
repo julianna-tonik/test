@@ -13,7 +13,7 @@ export function SanityMigration() {
       <div className="grid w-full grid-cols-1 items-center gap-16 lg:grid-cols-[420px_1fr]">
         <Reveal className="flex flex-col gap-6">
           <p className="text-2xl text-off-white md:text-3xl">Move to Sanity without putting the website on hold</p>
-          <p className="text-base leading-6 text-off-white-light">We migrate Webflow content while your current website keeps running.</p>
+          <p className="text-base leading-6 text-off-white-light">We migrate your existing content while your current website keeps running.</p>
           <List>
             <ListItem>Move in stages.</ListItem>
             <ListItem>Repeat the import as content changes.</ListItem>

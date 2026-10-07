@@ -28,7 +28,7 @@ const NEED = {
   title: "Bring your website.",
   rest: "Leave with a system built to grow.",
   sub: "We turn your current site into a code-based Sanity setup your team owns.",
-  need: { label: "What we need from you", note: "Your current setup and priorities.", items: ["Access to your Webflow project or website code", "The external systems you want to connect"] },
+  need: { label: "What we need from you", note: "Your current setup and priorities.", items: ["Access to your current CMS or website code", "The external systems you want to connect"] },
   get: { label: "What you get", note: "A working system your team can use.", items: ["A ready-to-use repo with a clear visual system", "Sanity CMS with reusable page sections", "Preview and deployment workflows", "Conversational workflow through MCP, plus handover"] },
 };
 const PLANS = [
