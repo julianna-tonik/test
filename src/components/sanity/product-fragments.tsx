@@ -13,7 +13,7 @@ import { IdScope, useScopedId } from "./id-scope";
  */
 
 type Phase = 0 | 1 | 2;
-export const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 6.8 };
+export const PHASE_S: Record<Phase, number> = { 0: 3.8, 1: 3.6, 2: 7.4 };
 
 export const STEPS: { label: string; title: string; actor: Actor; who: string }[] = [
   { label: "01 Ask", title: "Ask for the page", actor: "human", who: "You" },
@@ -73,6 +73,7 @@ export const cellsPath = (x: number, y: number, cols: number, rows: number) => {
   return d;
 };
 
+/** Vibe Fixer node: small filled grey square on the selection's corner. */
 function Node({ x, y }: { x: number; y: number; color?: string }) {
   return <rect x={x - 2} y={y - 2} width="4.5" height="4.5" fill="#4a4a4a" stroke="#8a8a8a" strokeWidth="0.75" />;
 }
@@ -100,6 +101,56 @@ export function Cursor() {
   return <path d="M0 0L11.6 7L6.3 8.1L3.7 13.2Z" fill={HI} stroke={BG} strokeWidth="1" strokeLinejoin="round" />;
 }
 
+/* ── 01 ASK: a person writes a request; AI picks it up ── */
+
+function AskPanel() {
+  const d = useDur();
+  return (
+    <>
+      <Header>
+        {/* chat icon — header content sits 10 in from every edge */}
+        <path d="M10.5 10.5h14v10h-8l-3 3v-3h-3z" stroke={MID} strokeWidth="0.75" fill="none" />
+      </Header>
+
+      {/* composer: the request "types" as placeholder lines filling left → right */}
+      <rect x="10.5" y="178.5" width="299" height="46" stroke={LINE} fill="none" />
+      <G t={{ opacity: ab(1, 0, 2.5, 2.7, d) }}>
+        <R t={{ scaleX: ab(0, 1, 0.3, 1.4, d) }} linear={["scaleX"]} x={22} y={192} width={190} height={5} fill="#5a5a5a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
+        <R t={{ scaleX: ab(0, 1, 1.42, 2.1, d) }} linear={["scaleX"]} x={22} y={204} width={110} height={5} fill="#5a5a5a" style={{ transformBox: "fill-box", originX: 0, originY: 0.5 }} />
+      </G>
+      {/* send (icon only, arrow points where the message goes) */}
+      <G t={{ opacity: [[0, 0.45], [2.2, 0.45], [2.35, 1], [2.9, 1], [3.2, 0.45], [d, 0.45]] }}>
+        <rect x="279.5" y="191.5" width="20" height="20" stroke={HI} fill="none" />
+        <path d="M284.5 201.5h10M290.5 197.5l4 4-4 4" stroke={HI} strokeWidth="1" fill="none" />
+      </G>
+
+      {/* the sent request, in the thread — a person (solid avatar, bottom-aligned to the bubble) */}
+      <G t={{ opacity: ab(0, 1, 2.5, 2.9, d), y: ab(14, 0, 2.5, 3.0, d) }}>
+        <rect x="88.5" y="52.5" width="200" height="42" stroke={SOFT} fill="#222" />
+        <rect x="100" y="64" width="170" height="5" fill="#777" />
+        <rect x="100" y="76" width="100" height="5" fill="#777" />
+        <circle cx="302" cy="88.5" r="6" fill={HI} />
+      </G>
+
+      {/* AI picks it up — dashed avatar + working dots */}
+      <G t={{ opacity: ab(0, 1, 3.0, 3.3, d) }}>
+        <circle cx="16.5" cy="120.5" r="6" stroke={MID} strokeDasharray="1.8 1.8" fill="none" />
+        {[0, 1, 2].map((i) => (
+          <R
+            key={i}
+            t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }}
+            x={30 + i * 8}
+            y={118.5}
+            width="4"
+            height="4"
+            fill={MID}
+          />
+        ))}
+      </G>
+    </>
+  );
+}
+
 /* ── shared page layout: the same page is built in 02 and reviewed in 03 ── */
 
 export const PAGE = { x: 40, w: 240 };
@@ -110,8 +161,63 @@ export const SLOT = {
   cta: { y: 184, h: 30 },
 };
 /** Three cards (7 cells wide) become four (5 cells wide) when AI adds one. */
+const CARDS3 = [40, 125, 210];
 export const CARDS4 = [40, 40 + 190 / 3, 40 + 380 / 3, 230];
+const CARD_W3 = 70;
 export const CARD_W4 = 50;
+
+/* ── 02 BUILD: the page exists; AI adds a fourth card and the row makes room ── */
+
+function BuildPanel() {
+  const d = useDur();
+  const scope = useScopedId("");
+  const { y, h } = SLOT.cards;
+  return (
+    <>
+      <Header>
+        <path d="M10.5 10.5h5v5h-5zM17.5 10.5h5v5h-5zM10.5 17.5h5v5h-5zM17.5 17.5h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
+      </Header>
+      <rect x="36.5" y="44.5" width="248" height="174" stroke="#2e2e2e" fill="none" />
+
+      {/* sections already on the page */}
+      <path d={cellsPath(PAGE.x, SLOT.hero.y, 24, 5) + cellsPath(PAGE.x, SLOT.logos.y, 24, 1) + cellsPath(PAGE.x, SLOT.cta.y, 24, 3)} stroke={GRID} fill="none" />
+
+      {/* existing cards narrow and shift — cells stay square, the card is clipped */}
+      {CARDS3.map((x3, i) => (
+        <G key={i} t={{ x: ab(x3, CARDS4[i], 0.4, 1.3, d) }}>
+          <defs>
+            <clipPath id={`${scope}bc${i}`}>
+              <R t={{ width: ab(CARD_W3 + 1, CARD_W4 + 1, 0.4, 1.3, d) }} x={0} y={y} height={h + 1} />
+            </clipPath>
+          </defs>
+          <path d={cellsPath(0, y, 7, 4)} stroke={GRID} fill="none" clipPath={`url(#${scope}bc${i})`} />
+          <R t={{ width: ab(CARD_W3, CARD_W4, 0.4, 1.3, d) }} x={0.5} y={y + 0.5} height={h} stroke={GRID} fill="none" />
+        </G>
+      ))}
+
+      {/* the new card: AI marks the free slot (dashed), fills it; the same outline then closes into a solid line */}
+      <G t={{ opacity: ab(0, 1, 1.5, 2.0, d) }}>
+        <path d={cellsPath(CARDS4[3], y, 5, 4)} stroke={GRID} fill="none" />
+      </G>
+      <R
+        t={{
+          opacity: ab(0, 1, 1.2, 1.4, d),
+          strokeDasharray: [[0, "4 3"], [2.1, "4 3"], [2.6, "4 0"], [d, "4 0"]],
+          stroke: [[0, HI], [2.4, HI], [2.9, EDGE], [d, EDGE]],
+        }}
+        x={CARDS4[3] + 0.5}
+        y={y + 0.5}
+        width={CARD_W4}
+        height={h}
+        fill="none"
+      />
+      {/* nodes stay on top the whole time, then step away once the card has settled */}
+      <G t={{ opacity: [[0, 0], [1.2, 0], [1.4, 1], [2.7, 1], [3.0, 0], [d, 0]] }}>
+        {[[0, 0], [CARD_W4, 0], [0, h], [CARD_W4, h]].map(([dx, dy], k) => <Node key={k} x={CARDS4[3] + 0.5 + dx} y={y + 0.5 + dy} />)}
+      </G>
+    </>
+  );
+}
 
 /* ── 03 REVIEW pieces (shared with /sanity/review-variants); the hero uses variant C · approve ── */
 
@@ -144,12 +250,12 @@ export function SwitchHeader({ t }: { t: number }) {
 }
 
 /** Page frame that lights up once live, plus a slow sweep across the given boxes. */
-export function GoLive({ id: local, t, boxes, frame = [36, 44, 248, 174] }: { id: string; t: number; boxes: [number, number, number, number][]; frame?: [number, number, number, number] }) {
+export function GoLive({ id: local, t, boxes }: { id: string; t: number; boxes: [number, number, number, number][] }) {
   const d = useDur();
   const id = useScopedId(local);
   return (
     <>
-      <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={frame[0] + 0.5} y={frame[1] + 0.5} width={frame[2]} height={frame[3]} fill="none" />
+      <R t={{ stroke: ab("#2e2e2e", EDGE, t, t + 0.5, d) }} x={36.5} y={44.5} width={248} height={174} fill="none" />
       <defs>
         <linearGradient id={`vg${id}`}>
           <stop offset="0" stopColor="#fff" stopOpacity="0" />
@@ -302,12 +408,23 @@ export function ReviewApprove() {
       <DraftBlock x={40} y={110} w={240} h={10} t={2.2} />
 
       {/* cards: the fourth is moved to the front, then the row is approved */}
-      {CARDS4.map((x, i) => (
-        <G key={i} t={{ x: moves[i] }}>
-          <DraftBlock x={x} y={CARD_Y} w={CARD_W4} h={40} t={4.0} />
-          <rect x={x + 6} y={CARD_Y + 8} width="28" height="4" fill={BAR} />
-        </G>
-      ))}
+      {/* every card is opaque; the grabbed one fills, lifts a little and travels above the others */}
+      {CARDS4.map((x, i) => {
+        const grab = i === 3;
+        const held: Track = [[0, 0], [2.85, 0], [2.95, 1], [3.55, 1], [3.7, 0], [d, 0]];
+        return (
+          <G key={i} t={grab ? { x: moves[i], y: [[0, 0], [2.85, 0], [2.95, -4], [3.55, -4], [3.7, 0], [d, 0]] } : { x: moves[i] }}>
+            <rect x={x + 0.5} y={CARD_Y + 0.5} width={CARD_W4} height={40} fill={BG} />
+            {grab && (
+              <G t={{ opacity: held }}>
+                <rect x={x + 0.5} y={CARD_Y + 0.5} width={CARD_W4} height={40} fill="#2c2c2c" stroke={EDGE} />
+              </G>
+            )}
+            <DraftBlock x={x} y={CARD_Y} w={CARD_W4} h={40} t={4.0} />
+            <rect x={x + 6} y={CARD_Y + 8} width="28" height="4" fill={BAR} />
+          </G>
+        );
+      })}
 
       {/* cta */}
       <DraftBlock x={40} y={184} w={240} h={30} t={4.75} />
@@ -327,303 +444,7 @@ export function ReviewApprove() {
   );
 }
 
-/* ── LITERAL hero panels (founder-readable): real copy, named sections, statuses ── */
-
-function MonoT({ x, y, children, color = MID, size = 6.5, anchor }: { x: number; y: number; children: string; color?: string; size?: number; anchor?: "start" | "middle" | "end" }) {
-  return (
-    <text x={x} y={y} fill={color} fontSize={size} letterSpacing="0.2" textAnchor={anchor} style={{ fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
-      {children}
-    </text>
-  );
-}
-function SansT({ x, y, children, color = "#cfcfcf", size = 9 }: { x: number; y: number; children: string; color?: string; size?: number }) {
-  return (
-    <text x={x} y={y} fill={color} fontSize={size} letterSpacing="-0.2" style={{ fontFamily: "var(--font-sans)" }}>
-      {children}
-    </text>
-  );
-}
-/** Text typed in left → right inside a growing clip. */
-function TypedT({ id: local, x, y, w, t0, t1, children, size = 9, color }: { id: string; x: number; y: number; w: number; t0: number; t1: number; children: string; size?: number; color?: string }) {
-  const d = useDur();
-  const id = useScopedId(local);
-  return (
-    <>
-      <defs>
-        <clipPath id={id}>
-          <R t={{ width: ab(0, w, t0, t1, d) }} linear={["width"]} x={x - 1} y={y - size} height={size * 1.6} />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${id})`}>
-        <SansT x={x} y={y} size={size} color={color}>{children}</SansT>
-      </g>
-    </>
-  );
-}
-
-const REQUEST_LINES = ["Create an NYC version of our event page for", "enterprise security teams. Reuse the existing", "template and customer stories."];
-const PHOTO = "#666";
-const BTN = "#424242";
-
-/** A person: filled photo + two caption bars (Figma "Person"). */
-function PersonRow({ x, y, d = 12 }: { x: number; y: number; d?: number }) {
-  return (
-    <>
-      <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} fill={PHOTO} />
-      <rect x={x + d + 5.5} y={y + d / 2 - 3.75} width="18" height="2.5" fill={PBAR} />
-      <rect x={x + d + 5.5} y={y + d / 2 + 1.75} width="15.5" height="2.5" fill={PBAR} />
-    </>
-  );
-}
-
-function AskLiteral() {
-  const d = useDur();
-  return (
-    <>
-      <Header>
-        <path d="M13.5 10.5h13v9.5h-7.5l-3 3v-3h-2.5z" stroke={MID} strokeWidth="0.75" fill="none" />
-        <MonoT x={35} y={19}>New request</MonoT>
-        <MonoT x={307} y={19} anchor="end" color="#666">Talk to your LLM</MonoT>
-      </Header>
-
-      {/* composer: the request is typed */}
-      <rect x="13.5" y="167.5" width="293" height="59" stroke={LINE} fill="none" />
-      <G t={{ opacity: ab(1, 0, 2.5, 2.7, d) }}>
-        {REQUEST_LINES.map((l, i) => (
-          <TypedT key={i} id={`ask${i}`} x={25} y={185 + i * 12} w={[205, 210, 140][i]} t0={0.3 + i * 0.65} t1={0.9 + i * 0.65} size={8.5}>{l}</TypedT>
-        ))}
-      </G>
-      <G t={{ opacity: [[0, 0.45], [2.2, 0.45], [2.35, 1], [2.9, 1], [3.2, 0.45], [d, 0.45]] }}>
-        <rect x="278.5" y="198.5" width="19" height="19" stroke={HI} fill="none" />
-        <path d="M283 208h10M289 204l4 4-4 4" stroke={HI} strokeWidth="1" fill="none" />
-      </G>
-
-      {/* sent — a person (filled photo, bottom-aligned to the bubble) */}
-      <G t={{ opacity: ab(0, 1, 2.5, 2.9, d), y: ab(14, 0, 2.5, 3.0, d) }}>
-        <rect x="80.5" y="45.5" width="206" height="51" stroke={SOFT} fill="#222" />
-        {REQUEST_LINES.map((l, i) => <SansT key={i} x={93} y={62 + i * 12} size={8.5}>{l}</SansT>)}
-        <circle cx="301" cy="91" r="6" fill={PHOTO} />
-      </G>
-
-      {/* AI picks it up */}
-      <G t={{ opacity: ab(0, 1, 3.0, 3.3, d) }}>
-        <circle cx="19" cy="115" r="5.5" stroke={MID} strokeDasharray="1.8 1.8" fill="none" />
-        <MonoT x={33} y={117.5}>Building a draft in Sanity</MonoT>
-        {[0, 1, 2].map((i) => (
-          <R key={i} t={{ opacity: [[0, 0.3], [3.1 + i * 0.1, 0.3], [3.3 + i * 0.1, 1], [3.55 + i * 0.1, 0.3], [d, 0.6]] }} x={142.5 + i * 7} y={113} width="4" height="4" fill={MID} />
-        ))}
-      </G>
-    </>
-  );
-}
-
-/** The library lists sections in its own order, so picks jump around the list while the page fills top → bottom. */
-const LIB_ORDER: { name: string; pick?: number }[] = [
-  { name: "Hero", pick: 0 },
-  { name: "Stories", pick: 3 },
-  { name: "Stats" },
-  { name: "Logos", pick: 1 },
-  { name: "Form", pick: 4 },
-  { name: "Speakers", pick: 2 },
-  { name: "Schedule" },
-];
-const pickAt = (n: number) => 0.2 + n * 0.6;
-const SLOTS: { name: string; y: number; h: number }[] = [
-  { name: "Hero", y: 45, h: 29 },
-  { name: "Logos", y: 82, h: 21 },
-  { name: "Speakers", y: 111, h: 38 },
-  { name: "Stories", y: 157, h: 30 },
-  { name: "Form", y: 195, h: 32 },
-];
-const PBAR = "#4f4f4f";
-const corners4 = (x: number, y: number, w: number, h: number) => [[x + 0.5, y + 0.5], [x + w + 0.5, y + 0.5], [x + 0.5, y + h + 0.5], [x + w + 0.5, y + h + 0.5]] as const;
-
-/** The outline itself changes state: dashed (empty / AI at work, with nodes) → solid. */
-function Slot({ x, y, w, h, s, children }: { x: number; y: number; w: number; h: number; s: number; children: React.ReactNode }) {
-  const d = useDur();
-  const r = { x: x + 0.5, y: y + 0.5, width: w, height: h };
-  return (
-    <>
-      <G t={{ opacity: ab(0, 1, s + 0.25, s + 0.5, d) }}>
-        <rect {...r} fill="#202020" />
-        {children}
-      </G>
-      <G t={{ opacity: ab(1, 0, s, s + 0.1, d) }}>
-        <rect {...r} fill="none" stroke="#444" strokeDasharray="2 3" />
-      </G>
-      <G t={{ opacity: [[0, 0], [s, 0], [s + 0.1, 1], [s + 0.6, 1], [s + 0.72, 0], [d, 0]] }}>
-        <rect {...r} fill="none" stroke="#cfcfcf" strokeDasharray="4 3" />
-        {corners4(x, y, w, h).map(([a, b], i) => <Node key={i} x={a} y={b} />)}
-      </G>
-      <G t={{ opacity: ab(0, 1, s + 0.6, s + 0.72, d) }}>
-        <rect {...r} fill="none" stroke="#3a3a3a" />
-      </G>
-    </>
-  );
-}
-
-function BuildLiteral() {
-  const d = useDur();
-  const PX = 93, PW = 214;
-  return (
-    <>
-      <Header>
-        <path d="M13.5 11h5v5h-5zM20.5 11h5v5h-5zM13.5 18h5v5h-5zM20.5 18h5v5h-5z" stroke={MID} strokeWidth="0.75" fill="none" />
-        <MonoT x={33} y={19}>Sanity Studio</MonoT>
-        <G t={{ opacity: ab(1, 0, 3.15, 3.3, d) }}>
-          <MonoT x={307} y={19} anchor="end" color="#666">Building…</MonoT>
-        </G>
-        <G t={{ opacity: ab(0, 1, 3.25, 3.45, d) }}>
-          <MonoT x={307} y={19} anchor="end" color={HI}>Draft ready</MonoT>
-        </G>
-      </Header>
-
-      {/* approved section library — a picked chip's outline goes dashed, then fills */}
-      {LIB_ORDER.map(({ name: n, pick }, i) => {
-        const s = pickAt(pick ?? 0);
-        const picked = pick !== undefined;
-        const y = 45 + i * 22;
-        return (
-          <g key={n}>
-            <rect x="13.5" y={y + 0.5} width="68" height="16" fill="#202020" />
-            <MonoT x={22} y={y + 10} size={5.5} color={picked ? MID : "#555"}>{n}</MonoT>
-            {picked ? (
-              <>
-                {/* picked: the chip simply lights up — dashed outlines are kept for what appears on the page */}
-                <G t={{ opacity: ab(1, 0, s, s + 0.2, d) }}>
-                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#3a3a3a" />
-                </G>
-                <G t={{ opacity: ab(0, 1, s, s + 0.2, d) }}>
-                  <rect x="13.5" y={y + 0.5} width="68" height="16" fill="#2a2a2a" stroke="#8a8a8a" />
-                  <MonoT x={22} y={y + 10} size={5.5} color={HI}>{n}</MonoT>
-                </G>
-              </>
-            ) : (
-              <rect x="13.5" y={y + 0.5} width="68" height="16" fill="none" stroke="#333" />
-            )}
-          </g>
-        );
-      })}
-
-      {/* the event template fills up — sections shown as content, not names */}
-      {SLOTS.map((b) => {
-        const s = pickAt(LIB_ORDER.find((l) => l.name === b.name)!.pick!) + 0.15;
-        return (
-          <Slot key={b.name} x={PX} y={b.y} w={PW} h={b.h} s={s}>
-            {b.name === "Hero" && <SansT x={PX + 12} y={b.y + 18.5} size={11}>NYC Security Summit</SansT>}
-            {b.name === "Logos" && [0, 1, 2, 3, 4].map((k) => <rect key={k} x={PX + 13 + k * 41.5} y={b.y + 9} width="22" height="3" fill="#666" />)}
-            {b.name === "Speakers" && [106, 156, 206.5, 256.5].map((px) => <PersonRow key={px} x={px} y={b.y + 13} />)}
-            {b.name === "Stories" && (
-              <>
-                <circle cx={PX + 19} cy={b.y + 15} r="6" fill={PHOTO} />
-                <rect x={PX + 33} y={b.y + 10.5} width="150" height="2.5" fill={PBAR} />
-                <rect x={PX + 33} y={b.y + 17.5} width="100" height="2.5" fill={PBAR} />
-              </>
-            )}
-            {b.name === "Form" && (
-              <>
-                <rect x={PX + 13.5} y={b.y + 9.5} width="123" height="13" stroke="#555" fill="none" />
-                <rect x={PX + 145} y={b.y + 9} width="56" height="14" fill={BTN} />
-                <MonoT x={PX + 173} y={b.y + 18} size={5.5} anchor="middle" color={HI}>Register</MonoT>
-              </>
-            )}
-          </Slot>
-        );
-      })}
-    </>
-  );
-}
-
-/** Review block: its own outline turns light (a person's selection) while `sel` is on. */
-function RBlock({ x, y, w, h, sel, children }: { x: number; y: number; w: number; h: number; sel?: Track; children?: React.ReactNode }) {
-  const r = { x: x + 0.5, y: y + 0.5, width: w, height: h };
-  return (
-    <>
-      <rect {...r} fill="#202020" stroke="#333" />
-      {children}
-      {sel && (
-        <G t={{ opacity: sel }}>
-          <rect {...r} fill="none" stroke="#cfcfcf" />
-          {corners4(x, y, w, h).map(([a, b], i) => <Node key={i} x={a} y={b} />)}
-        </G>
-      )}
-    </>
-  );
-}
-
-function ReviewLiteral() {
-  const d = useDur();
-  const X = 20, W = 280;
-  const sel = (a: number, b: number): Track => [[0, 0], [a, 0], [a + 0.1, 1], [b, 1], [b + 0.2, 0], [d, 0]];
-  const boxes: [number, number, number, number][] = [[X, 52, W, 22.5], [X, 80.5, W, 47.5], [X, 134, W, 32], [X, 172, W, 32], [X, 210, W, 10]];
-  return (
-    <>
-      <Header>
-        <MonoT x={13} y={19} color="#666">acme.com/nyc-summit</MonoT>
-        <G t={{ opacity: ab(1, 0, 4.85, 5.05, d) }}>
-          <MonoT x={271} y={19} anchor="end">Draft</MonoT>
-        </G>
-        <G t={{ opacity: ab(0, 1, 4.95, 5.25, d) }}>
-          <MonoT x={271} y={19} anchor="end" color={HI}>Live</MonoT>
-        </G>
-        <rect x="277.5" y="10.5" width="29" height="12" rx="6" stroke={SOFT} fill="none" />
-        <R t={{ opacity: ab(0, 1, 4.8, 5.2, d) }} x={278} y={11} width={28} height={11} rx={5.5} fill="#3a3a3a" />
-        <G t={{ x: ab(0, 16, 4.8, 5.2, d) }}>
-          <circle cx="284" cy="16.5" r="4" fill={MID} />
-        </G>
-        <G t={{ x: ab(0, 16, 4.8, 5.2, d), opacity: ab(0, 1, 4.95, 5.2, d) }}>
-          <circle cx="284" cy="16.5" r="4" fill={HI} />
-        </G>
-      </Header>
-
-      {/* nav */}
-      <RBlock x={X} y={52} w={W} h={22.5}>
-        <rect x={X + 13} y={61} width="34" height="4.5" fill={PBAR} />
-        {[0, 1, 2].map((k) => <rect key={k} x={X + 203 + k * 24} y={62} width="16" height="3" fill={PBAR} />)}
-      </RBlock>
-
-      {/* hero — the person rewrites the headline */}
-      <RBlock x={X} y={80.5} w={W} h={47.5} sel={sel(1.15, 2.4)}>
-        <G t={{ opacity: ab(1, 0, 1.35, 1.55, d) }}>
-          <SansT x={X + 13} y={102.5} size={12.5}>Build trust into</SansT>
-          <SansT x={X + 13} y={115.5} size={12.5}>every layer.</SansT>
-        </G>
-        <TypedT id="rv1" x={X + 13} y={102.5} w={130} t0={1.6} t1={2.0} size={12.5}>Security leaders,</TypedT>
-        <TypedT id="rv2" x={X + 13} y={115.5} w={130} t0={2.0} t1={2.35} size={12.5}>meet in New York.</TypedT>
-      </RBlock>
-
-      {/* speakers ↓ / stories ↑ — the person drags customer stories above speakers */}
-      <G t={{ y: ab(0, 38, 3.0, 3.8, d) }}>
-        <RBlock x={X} y={134} w={W} h={32}>
-          {[33, 105, 177.5, 249.5].map((px) => <PersonRow key={px} x={px} y={143} d={14} />)}
-        </RBlock>
-      </G>
-      <G t={{ y: ab(0, -38, 3.0, 3.8, d) }}>
-        <RBlock x={X} y={172} w={W} h={32} sel={sel(2.85, 3.9)}>
-          <circle cx={X + 20} cy={188} r="7" fill={PHOTO} />
-          <rect x={X + 35} y={183.5} width="170" height="2.5" fill={PBAR} />
-          <rect x={X + 35} y={190.5} width="120" height="2.5" fill={PBAR} />
-        </RBlock>
-      </G>
-
-      {/* footer */}
-      <RBlock x={X} y={210} w={W} h={10} />
-
-      <GoLive id="lit" t={5.2} boxes={boxes} frame={[13, 45, 294, 182]} />
-
-      <Person
-        t={{
-          x: [[0, 300], [0.4, 300], [1.1, 110], [2.4, 110], [2.85, 210], [3.8, 210], [4.7, 290], [d, 290]],
-          y: [[0, 236], [0.4, 236], [1.1, 100], [2.4, 100], [2.85, 188], [3.0, 188], [3.8, 150], [4.7, 18], [d, 18]],
-          opacity: [[0, 0], [0.4, 0], [0.6, 1], [5.4, 1], [5.8, 0], [d, 0]],
-          scale: [[0, 1], [1.1, 1], [1.17, 0.82], [1.27, 1], [2.85, 1], [2.92, 0.85], [3.8, 0.85], [3.9, 1], [4.7, 1], [4.77, 0.82], [4.87, 1], [d, 1]],
-        }}
-      />
-    </>
-  );
-}
-
-export const PANELS = [AskLiteral, BuildLiteral, ReviewLiteral];
+export const PANELS = [AskPanel, BuildPanel, ReviewApprove];
 
 export function ProductFragments() {
   const ref = useRef<HTMLDivElement>(null);

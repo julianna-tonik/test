@@ -41,7 +41,7 @@ const valueAt = (pts: Track, t: number) => pts.reduce<V>((v, p) => (p[0] <= t ? 
 const Ctx = createContext({ on: false, reduce: false });
 
 function useLoop(tracks: Record<string, Track>) {
-  const { on, reduce } = useContext(Ctx);
+  const { on } = useContext(Ctx);
   const animate: Record<string, V | V[]> = {};
   const transition: Record<string, object> = {};
   for (const [k, pts] of Object.entries(tracks)) {
@@ -49,7 +49,8 @@ function useLoop(tracks: Record<string, Track>) {
       animate[k] = pts.map((p) => p[1]);
       transition[k] = { duration: D, times: pts.map((p) => p[0] / D), ease: io, repeat: Infinity };
     } else {
-      animate[k] = reduce ? valueAt(pts, RESULT) : pts[0][1];
+      // waiting scenes show their finished frame, so a scene that builds from nothing never leaves an empty box
+      animate[k] = valueAt(pts, RESULT);
       transition[k] = { duration: 0.5, ease: easeOut };
     }
   }
