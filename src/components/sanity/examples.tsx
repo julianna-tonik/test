@@ -19,9 +19,12 @@ export function SanityExamples() {
   const [active, setActive] = useState(-1);
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start center", "end center"] });
+  // the example whose top has crossed the middle of the screen; real positions, since the examples differ in height
   useMotionValueEvent(scrollYProgress, "change", (p) => {
-    const n = examples.length;
-    setActive(p <= 0 ? -1 : p >= 1 ? n : Math.min(Math.floor(p * n), n - 1));
+    const mid = window.innerHeight / 2;
+    let i = -1;
+    sectionRefs.current.forEach((el, k) => { if (el && el.getBoundingClientRect().top <= mid) i = k; });
+    setActive(p >= 1 ? examples.length : i);
   });
 
   const scrollTo = (i: number) => {
