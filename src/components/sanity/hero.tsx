@@ -29,8 +29,9 @@ export function SanityHero() {
         <SanityBookCall />
       </header>
 
-      {/* desktop: the hero fills the first screen; spare height goes around the content, logos sit on the fold */}
-      <div className="relative flex w-full flex-col gap-12 pb-4 pt-10 sm:gap-24 md:pb-28 lg:flex-1 lg:justify-center">
+      {/* desktop: the hero fills the first screen with content and logos at their natural height; the spare space
+          goes below the logos, so the next section label never sits under them like a caption */}
+      <div className="relative flex w-full flex-col gap-12 pb-4 pt-10 sm:gap-24 md:pb-28">
         <div className="flex flex-col items-start justify-between gap-10 lg:flex-row lg:items-end">
           <h1 className="text-4xl leading-none tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
             {["Move fast.", "Stay in control."].map((t, i) => (
