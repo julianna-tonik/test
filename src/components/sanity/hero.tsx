@@ -20,7 +20,7 @@ export function SanityHero() {
   return (
     <section
       ref={heroRef}
-      className="relative flex w-full max-w-container-6xl flex-col gap-10 pb-6 pt-14 font-sans text-off-white lg:min-h-[calc(100svh-40px)] lg:pt-0"
+      className="relative flex w-full max-w-container-6xl flex-col gap-10 pb-6 pt-14 font-sans text-off-white lg:pt-0"
     >
       <header className="z-10 hidden w-full items-start justify-between lg:flex">
         <a href="https://www.tonik.com/">
@@ -29,8 +29,6 @@ export function SanityHero() {
         <SanityBookCall />
       </header>
 
-      {/* desktop: the hero fills the first screen with content and logos at their natural height; the spare space
-          goes below the logos, so the next section label never sits under them like a caption */}
       <div className="relative flex w-full flex-col gap-12 pb-4 pt-10 sm:gap-24 md:pb-28">
         <div className="flex flex-col items-start justify-between gap-10 lg:flex-row lg:items-end">
           <h1 className="text-4xl leading-none tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
