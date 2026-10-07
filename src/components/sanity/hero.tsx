@@ -6,7 +6,7 @@ import { Ticker } from "@/components/ui/ticker";
 import { useHeroScroll } from "@/components/sections/hero-scroll-context";
 import { ProductFragments } from "./product-fragments";
 import { HeroSlide } from "./hero-mobile";
-import { SanityBookCall, easeOut } from "./shared";
+import { SanityBookCall, SectionLabel, easeOut } from "./shared";
 import { SanityStickyHeader } from "./sticky-header";
 
 const line = {
@@ -75,12 +75,16 @@ export function SanityHero() {
         </motion.div>
       </div>
 
-      {/* phones: logos a third closer together so more of them show at once */}
-      <div className="w-full md:hidden">
-        <Ticker gap={7} />
-      </div>
-      <div className="hidden w-full md:block">
-        <Ticker />
+      {/* logos get their own label, Vibe Fixer style, so the next section label never reads as their caption */}
+      <div className="flex w-full flex-col gap-6">
+        <SectionLabel>Trusted by teams at</SectionLabel>
+        {/* phones: logos a third closer together so more of them show at once */}
+        <div className="w-full md:hidden">
+          <Ticker gap={7} />
+        </div>
+        <div className="hidden w-full md:block">
+          <Ticker />
+        </div>
       </div>
       <SanityStickyHeader />
     </section>
