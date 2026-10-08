@@ -28,8 +28,8 @@ export function SanityMigration() {
           <Separator />
           <p className="font-mono text-sm uppercase leading-none tracking-tight text-off-white">Where it can go</p>
         </div>
-        <Reveal className="grid w-full grid-cols-1 gap-10 md:grid-cols-3 lg:grid-cols-[420px_repeat(3,1fr)]">
-          <div className="flex flex-col gap-3 md:col-span-3 lg:col-span-1">
+        <Reveal className="grid w-full grid-cols-1 gap-10 md:grid-cols-3 lg:grid-cols-[444px_repeat(3,1fr)]">
+          <div className="flex flex-col gap-3 md:col-span-3 lg:col-span-1 lg:pr-6">
             <p className="text-3xl leading-10 text-off-white">
               Start with pages. <span className="text-off-white-light">Expand when it makes sense.</span>
             </p>
