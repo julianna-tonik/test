@@ -40,7 +40,7 @@ export function SanityNeedGet() {
           <p className="text-3xl leading-10 text-off-white">
             Bring your website. <span className="text-off-white-light">Leave with a system built to grow.</span>
           </p>
-          <p className="text-base leading-6 text-off-white-light">We turn your current site into a code-based Sanity setup your team owns.</p>
+          <p className="text-base leading-6 text-off-white-light">We turn your current site into a code-based system your team owns: content model, sections, and workflows, built on Sanity.</p>
         </Reveal>
         <Reveal delay={0.08} className="flex flex-col gap-6">
           <p className="text-base leading-6">

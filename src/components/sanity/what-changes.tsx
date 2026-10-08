@@ -117,7 +117,7 @@ function Icon({ i }: { i: number }) {
 
 // Order and copy exactly as V1. `icon` points into `icons`.
 const items: { title: string; text: string; icon: number }[] = [
-  { title: "Launch campaigns faster", text: "Turn a brief into a Sanity draft without starting from scratch.", icon: 0 },
+  { title: "Launch campaigns faster", text: "Turn a brief into a ready draft without starting from scratch.", icon: 0 },
   { title: "Keep every page on-brand", text: "Use layouts and content patterns your team has approved.", icon: 3 },
   { title: "Reuse your strongest content", text: "Reuse customer stories, product messages, and CTAs.", icon: 4 },
   { title: "Adapt campaigns for each audience", text: "Create versions for markets, segments, and languages.", icon: 1 },

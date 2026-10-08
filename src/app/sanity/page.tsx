@@ -8,12 +8,13 @@ import { SanityWhatChanges } from "@/components/sanity/what-changes";
 import { SanityMigration } from "@/components/sanity/migration";
 import { SanityNeedGet, SanityPricing } from "@/components/sanity/pricing";
 import { SanityCta } from "@/components/sanity/cta";
+import { SanityCaseStudy, SanityToolkit, SanityWhyTonik } from "@/components/sanity/tonik-sections";
 import { NoOrphans } from "@/components/sanity/typography";
 
 export const metadata: Metadata = {
-  title: "Build and manage pages faster with Sanity | tonik",
+  title: "Launch on-brand pages without waiting on developers | tonik",
   description:
-    "We build Sanity websites your marketing team can update by describing what they need. Every page still follows your brand and publishing process.",
+    "Launch new pages without waiting on developers. Your team describes what it needs, gets an on-brand draft, and publishes through your usual approvals. We build the whole system for you on Sanity.",
 };
 
 export default function SanityPage() {
@@ -23,10 +24,13 @@ export default function SanityPage() {
         {/* balanced wrapping on headings and body copy, no short words hanging at line ends */}
         <NoOrphans className="flex w-full flex-col items-center [&_.text-2xl]:text-balance [&_.text-3xl]:text-balance [&_.text-4xl]:text-balance [&_h1]:text-balance [&_p]:text-balance [&_li]:text-balance">
           <SanityHero />
+          <SanityWhyTonik />
           <SanityHowItWorks />
           <SanityExamples />
+          <SanityCaseStudy />
           <SanityWhatChanges />
           <SanityMigration />
+          <SanityToolkit />
           <SanityNeedGet />
           <SanityPricing />
           <SanityCta />

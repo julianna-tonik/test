@@ -22,7 +22,7 @@ export function SanityCta() {
             {/* Expanding circle background */}
 
             <p className="font-mono text-xs uppercase leading-3 tracking-tight text-off-white transition-colors duration-300 group-active:text-off-black group-hover:text-off-black z-20">
-              THE MAIN PROMISE
+              WORK WITH TONIK
             </p>
 
             <motion.div className="flex w-full items-center justify-between">

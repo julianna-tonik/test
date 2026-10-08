@@ -10,6 +10,7 @@ const GLYPHS: Record<string, string> = {
   U: "M23.6 20.4v11.4c0 3.5 1.9 5.5 5 5.5s5-2 5-5.5V20.4",
   G: "M33.9 24.3c-.8-2.6-2.7-4.1-5.3-4.1-3.6 0-5.7 3.3-5.7 8.6s2.1 8.6 5.7 8.6c3.4 0 5.5-2.5 5.5-6.4v-.9h-5.4",
   P: "M24.6 37.9V20.4h5c2.9 0 4.6 1.8 4.6 4.7s-1.7 4.7-4.6 4.7h-5",
+  T: "M22.6 21h12M28.6 21v16.6",
 };
 
 /**
@@ -34,11 +35,12 @@ export function LetterIcon({ glyph, index, actor }: { glyph: string; index: numb
   );
 }
 
-export const steps: { glyph: string; title: string; text: string; actor: Actor }[] = [
-  { glyph: "D", title: "Describe what you need.", text: "Share the launch, audience, and goal.", actor: "human" },
-  { glyph: "U", title: "Use what already works.", text: "The draft uses approved sections and existing content.", actor: "ai" },
-  { glyph: "G", title: "Get a real draft.", text: "Review the page in Sanity and on staging.", actor: "human" },
-  { glyph: "P", title: "Publish when ready.", text: "Your team edits, approves, and publishes as usual.", actor: "human" },
+export const steps: { glyph: string; title: string; text: string; actor: Actor; who: string }[] = [
+  { glyph: "T", title: "We set it up.", text: "We model your content, build the sections, and set the rules the AI follows.", actor: "human", who: "tonik" },
+  { glyph: "D", title: "Describe what you need.", text: "Share the launch, audience, and goal.", actor: "human", who: "You" },
+  { glyph: "U", title: "Use what already works.", text: "The draft uses approved sections and existing content.", actor: "ai", who: "AI" },
+  { glyph: "G", title: "Get a real draft.", text: "Review the page in your CMS and on staging.", actor: "human", who: "Your team" },
+  { glyph: "P", title: "Publish when ready.", text: "Your team edits, approves, and publishes as usual.", actor: "human", who: "Your team" },
 ];
 
 /** Phones: icon left, text right; the line between steps is solid before a person's step, dashed before AI's. */
@@ -61,7 +63,7 @@ export function HowTimeline() {
             <div className="flex flex-col gap-3 pt-1">
               <ActorTag
                 actor={s.actor}
-                label={s.actor === "ai" ? "AI" : i === 0 ? "You" : "Your team"}
+                label={s.who}
                 className={s.actor === "ai" ? "text-off-white-light" : "text-off-white"}
               />
               <p className="text-xl leading-7 text-off-white">
@@ -75,8 +77,9 @@ export function HowTimeline() {
   );
 }
 
-/** Who-does-what bar sitting exactly above the four columns: solid line = person, dashed = AI. */
+/** Who-does-what bar sitting exactly above the five columns: solid line = person, dashed = AI. */
 const lanes: { label: string; actor: Actor; span: string }[] = [
+  { label: "tonik", actor: "human", span: "md:col-span-1" },
   { label: "You", actor: "human", span: "md:col-span-1" },
   { label: "AI", actor: "ai", span: "md:col-span-1" },
   { label: "Your team", actor: "human", span: "md:col-span-2" },
@@ -89,7 +92,7 @@ export function SanityHowItWorks() {
 
       <ScrollText text="Ask for a page. Get a draft that already fits your website." />
 
-      <div className="hidden w-full grid-cols-4 gap-10 md:grid">
+      <div className="hidden w-full grid-cols-5 gap-10 md:grid">
         {lanes.map((l) => (
           <div key={l.label} className={cn("flex flex-col gap-3", l.span)}>
             {l.actor === "human" ? (
@@ -106,13 +109,13 @@ export function SanityHowItWorks() {
         <HowTimeline />
       </div>
 
-      <div className="hidden w-full grid-cols-1 gap-10 pt-14 sm:grid sm:grid-cols-2 md:grid-cols-4">
+      <div className="hidden w-full grid-cols-1 gap-10 pt-14 sm:grid sm:grid-cols-2 md:grid-cols-5">
         {steps.map((s, i) => (
           <Reveal key={s.glyph} delay={i * 0.08} className="flex flex-col gap-8">
             <LetterIcon glyph={s.glyph} index={i + 1} actor={s.actor} />
             <ActorTag
               actor={s.actor}
-              label={s.actor === "ai" ? "AI" : i === 0 ? "You" : "Your team"}
+              label={s.who}
               className={cn("-mt-4 md:hidden", s.actor === "ai" ? "text-off-white-light" : "text-off-white")}
             />
             <p className="text-xl leading-7 text-off-white">
@@ -124,7 +127,7 @@ export function SanityHowItWorks() {
 
       <Reveal className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-[72px]">
         <p className="font-mono text-sm uppercase leading-none tracking-tight text-off-white-light">
-          {"/*"} Sanity stays the source of truth. Your existing rules stay in place. {"*/"}
+          {"/*"} tonik sets up the system. Your team stays in control. {"*/"}
         </p>
       </Reveal>
     </section>

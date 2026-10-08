@@ -48,13 +48,13 @@ export function SanityHero() {
             className="flex w-full max-w-[400px] flex-col gap-5"
           >
             <p className="text-base leading-6">
-              We build Sanity websites your marketing team can update by describing what they need.
-              Every page still follows your brand and publishing process.
+              Launch new pages without waiting on developers. Your team describes what it needs, gets an on-brand draft, and
+              publishes through your usual approvals. We build the whole system for you on Sanity.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <SanityBookCall />
               <p className="font-mono text-xs uppercase leading-3 tracking-tight text-off-white-light">
-                {"/*"} Sanity + your content + control {"*/"}
+                {"/*"} tonik know-how + your content + control {"*/"}
               </p>
             </div>
           </motion.div>
