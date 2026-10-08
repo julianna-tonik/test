@@ -129,7 +129,7 @@ export function SanityWhatChanges() {
   return (
     <section className="flex w-full max-w-container-6xl flex-col gap-[120px] pb-[120px]">
       <SectionLabel>What changes for your team</SectionLabel>
-      <div className="grid w-full grid-cols-1 gap-16 lg:grid-cols-[340px_1fr]">
+      <div className="grid w-full grid-cols-1 gap-16 lg:grid-cols-[420px_1fr]">
         <Reveal>
           <p className="text-3xl leading-10 text-off-white">
             Marketing moves faster. <span className="text-off-white-light">The website stays consistent.</span>

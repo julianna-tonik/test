@@ -115,7 +115,7 @@ export function SanityToolkit() {
   return (
     <section className="flex w-full max-w-container-6xl flex-col gap-[120px] pb-[120px]">
       <SectionLabel>Our toolkit</SectionLabel>
-      <Reveal className="grid w-full grid-cols-1 gap-10 lg:grid-cols-[420px_1fr]">
+      <Reveal className="grid w-full grid-cols-1 gap-16 lg:grid-cols-[420px_1fr]">
         <Intro
           lead="Proven tools,"
           rest="chosen for the job."
